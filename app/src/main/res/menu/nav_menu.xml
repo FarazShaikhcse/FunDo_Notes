@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <group android:checkableBehavior="single"
+        android:id="@+id/group1">
+        <item
+            android:id="@+id/menuNotes"
+            android:title="Notes"
+            android:icon="@drawable/ic_baseline_sticky_note_2_24"/>
+        <item
+            android:id="@+id/menuReminder"
+            android:title="Reminder"
+            android:icon="@drawable/ic_baseline_alarm_24"/>
+    </group>
+    <group android:checkableBehavior="single"
+        android:id="@+id/group2">
+        <item
+            android:id="@+id/menuAddNotes"
+            android:title="Add Notes"
+            android:icon="@drawable/ic_baseline_add_24"/>
+    </group>
+    <group android:checkableBehavior="single"
+        android:id="@+id/group3">
+        <item
+            android:id="@+id/menuDeleted"
+            android:icon="@drawable/ic_baseline_delete_24"
+            android:title="Deleted" />
+    </group>
+    <group android:checkableBehavior="single"
+        android:id="@+id/group4">
+        <item
+            android:id="@+id/menuSettings"
+            android:icon="@drawable/ic_baseline_settings_24"
+            android:title="Settings" />
+    </group>
+</menu>
