@@ -5,10 +5,10 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.example.notesapp.MainActivity
-import com.example.notesapp.Service.AuthenticationService
-import com.example.notesapp.Service.FireBaseDatabase
-import com.example.notesapp.Utils.SharedPref
-import com.example.notesapp.Utils.User
+import com.example.notesapp.service.AuthenticationService
+import com.example.notesapp.service.FireBaseDatabase
+import com.example.notesapp.utils.SharedPref
+import com.example.notesapp.utils.User
 import com.google.firebase.auth.FirebaseAuth
 
 class SharedViewModel : ViewModel() {
@@ -77,6 +77,7 @@ class SharedViewModel : ViewModel() {
     fun logout() {
         Log.d("logout",SharedPref.get("fuid").toString()+"test")
         MainActivity.roomDBClass.noteDao.deleteAllUserNotes(SharedPref.get("fuid").toString())
+        SharedPref.clearAll()
         AuthenticationService.signout()
 
     }

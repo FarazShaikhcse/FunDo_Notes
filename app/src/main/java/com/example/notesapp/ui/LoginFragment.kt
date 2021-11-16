@@ -1,4 +1,4 @@
-package com.example.notesapp
+package com.example.notesapp.ui
 
 import android.content.Context
 import android.os.Bundle
@@ -10,12 +10,11 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
-import com.example.notesapp.Utils.Util
+import com.example.notesapp.utils.Util
 import android.util.Log
 import androidx.lifecycle.ViewModelProvider
 import com.example.notesapp.viewmodels.SharedViewModel
 import com.example.notesapp.viewmodels.SharedViewModelFactory
-import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.firebase.FirebaseApp
 import com.facebook.FacebookException
 import com.facebook.login.LoginResult
@@ -25,9 +24,10 @@ import com.facebook.login.widget.LoginButton
 import java.util.*
 
 import androidx.appcompat.app.AppCompatActivity
-import com.example.notesapp.Service.AuthenticationService
-import com.example.notesapp.Service.FireBaseDatabase.Companion.addFbDataToDB
-import com.example.notesapp.Utils.SharedPref
+import com.example.notesapp.R
+import com.example.notesapp.service.AuthenticationService
+import com.example.notesapp.service.FireBaseDatabase.Companion.addFbDataToDB
+import com.example.notesapp.utils.SharedPref
 import com.example.notesapp.viewmodels.LoginViewModel
 import com.example.notesapp.viewmodels.LoginViewModelFactory
 import com.facebook.GraphResponse
@@ -35,7 +35,6 @@ import com.facebook.GraphResponse
 import org.json.JSONObject
 
 import com.facebook.GraphRequest
-import com.google.api.Authentication
 
 
 class LoginFragment : Fragment(), View.OnClickListener {

@@ -1,4 +1,4 @@
-package com.example.notesapp
+package com.example.notesapp.ui
 
 import android.os.Bundle
 import androidx.fragment.app.Fragment
@@ -8,8 +8,9 @@ import android.view.ViewGroup
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
-import com.example.notesapp.Utils.User
-import com.example.notesapp.Utils.Util
+import com.example.notesapp.R
+import com.example.notesapp.utils.User
+import com.example.notesapp.utils.Util
 import com.example.notesapp.viewmodels.RegistrationViewModel
 import com.example.notesapp.viewmodels.RegistrationViewModelFactory
 import com.example.notesapp.viewmodels.SharedViewModel

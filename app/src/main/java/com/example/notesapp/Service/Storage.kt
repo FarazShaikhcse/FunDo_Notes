@@ -1,8 +1,6 @@
-package com.example.notesapp.Service
+package com.example.notesapp.service
 
-import android.graphics.Bitmap
 import android.net.Uri
-import com.google.android.gms.tasks.OnSuccessListener
 import com.google.firebase.storage.FirebaseStorage
 
 class Storage {

@@ -8,11 +8,11 @@ import android.widget.Toast
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
-
 import androidx.lifecycle.ViewModelProvider
 import androidx.room.Room
-import com.example.notesapp.Service.RoomDatabase
-import com.example.notesapp.Utils.SharedPref
+import com.example.notesapp.service.RoomDatabase
+import com.example.notesapp.ui.*
+import com.example.notesapp.utils.SharedPref
 import com.example.notesapp.viewmodels.SharedViewModel
 import com.example.notesapp.viewmodels.SharedViewModelFactory
 import com.facebook.FacebookSdk
@@ -21,9 +21,10 @@ import com.google.android.material.navigation.NavigationView
 
 class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
 
-    companion object{
+    companion object {
         lateinit var roomDBClass: RoomDatabase
     }
+
     lateinit var flashFragment: SplashFragment
     lateinit var profileIcon: ImageView
     lateinit var navMenu: NavigationView
@@ -41,7 +42,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         drawerLayout = findViewById(R.id.drawerLayout)
         navMenu = findViewById(R.id.myNavMenu)
         setSupportActionBar(toolbar)
-
         val toggle =
             ActionBarDrawerToggle(this, drawerLayout, toolbar, R.string.open, R.string.close)
         drawerLayout.addDrawerListener(toggle)
@@ -55,10 +55,11 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         observeNavigation()
         SharedPref.initSharedPref(this)
         flashFragment = SplashFragment()
-        if( savedInstanceState == null){
+        if (savedInstanceState == null) {
             gotoSplashScreen()
         }
-        roomDBClass= Room.databaseBuilder(applicationContext,RoomDatabase::class.java,"myDB").fallbackToDestructiveMigration().allowMainThreadQueries().build()
+        roomDBClass = Room.databaseBuilder(applicationContext, RoomDatabase::class.java, "myDB")
+            .fallbackToDestructiveMigration().allowMainThreadQueries().build()
 
 
     }
@@ -211,7 +212,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
         return super.onOptionsItemSelected(item)
     }
-
 
 
 }

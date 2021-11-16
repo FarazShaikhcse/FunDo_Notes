@@ -1,9 +1,8 @@
-package com.example.notesapp.Utils
+package com.example.notesapp.service.roomdb
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import androidx.room.Query
 
 @Entity(tableName = "user")
 data class UserEntity(

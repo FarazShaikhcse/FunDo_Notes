@@ -1,4 +1,4 @@
-package com.example.notesapp
+package com.example.notesapp.ui
 
 import android.os.Build
 import android.os.Bundle
@@ -12,8 +12,10 @@ import androidx.appcompat.widget.SearchView
 import androidx.appcompat.widget.Toolbar
 import androidx.core.view.isVisible
 import androidx.lifecycle.ViewModelProvider
-import com.example.notesapp.Utils.Note
-import com.example.notesapp.Utils.SharedPref
+import com.example.notesapp.R
+import com.example.notesapp.utils.Note
+import com.example.notesapp.service.roomdb.NoteEntity
+import com.example.notesapp.utils.SharedPref
 import com.example.notesapp.viewmodels.AddNoteViewModel
 import com.example.notesapp.viewmodels.AddNoteViewModelFactory
 import com.example.notesapp.viewmodels.SharedViewModel
@@ -36,9 +38,6 @@ class AddNoteFragment : Fragment() {
     lateinit var notesContent: EditText
     lateinit var saveBtn: FloatingActionButton
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-    }
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     override fun onCreateView(
@@ -89,7 +88,7 @@ class AddNoteFragment : Fragment() {
         toolbar = requireActivity().findViewById(R.id.myToolbar)
         toolbar.setNavigationIcon(R.drawable.ic_baseline_arrow_back_24)
         toolbar.setNavigationOnClickListener {
-            SharedPref.clearAll()
+            clearSharedPref()
             sharedViewModel.setGotoHomePageStatus(true)
         }
         userIcon = requireActivity().findViewById(R.id.userProfile)
@@ -102,17 +101,33 @@ class AddNoteFragment : Fragment() {
 
     }
 
+    private fun clearSharedPref() {
+        SharedPref.setUpdateStatus("updateStatus", false)
+        SharedPref.updateNotePosition("position", 0)
+        SharedPref.addString("title", "")
+        SharedPref.addString("note", "")
+        SharedPref.addString("noteid", "")
+    }
+
     @RequiresApi(Build.VERSION_CODES.O)
     private fun saveNote() {
         val titleText = notesTitle.text.toString()
         val noteText = notesContent.text.toString()
 
-        if (SharedPref.get("title").toString() != "") {
-            val note = Note(titleText, noteText, SharedPref.get("noteid").toString(), LocalDateTime.now().toString())
+        if (SharedPref.get("title").toString() != "" && SharedPref.get("note").toString() != "") {
+            val note = Note(
+                titleText,
+                noteText,
+                SharedPref.get("noteid").toString(),
+                LocalDateTime.now().toString()
+            )
             addNoteViewModel.updateNotesInDatabase(note, requireContext())
-        }
-        else {
-            val note = Note(titleText, noteText, LocalDateTime.now().toString(), LocalDateTime.now().toString())
+        } else {
+            val time = LocalDateTime.now().toString()
+            val note = NoteEntity(
+                time, SharedPref.get("fuid").toString(), titleText, noteText,
+                time, false
+            )
             addNoteViewModel.addNotesToDatabase(note, requireContext())
         }
 
@@ -129,7 +144,7 @@ class AddNoteFragment : Fragment() {
         }
         addNoteViewModel.databaseNoteUpdatedStatus.observe(viewLifecycleOwner) {
             if (it) {
-                SharedPref.clearAll()
+                clearSharedPref()
                 Toast.makeText(requireContext(), "updated", Toast.LENGTH_SHORT).show()
                 sharedViewModel.setGotoHomePageStatus(true)
 
@@ -140,7 +155,7 @@ class AddNoteFragment : Fragment() {
         }
         addNoteViewModel.databaseNoteDeletedStatus.observe(viewLifecycleOwner) {
             if (it) {
-                SharedPref.clearAll()
+                clearSharedPref()
                 Toast.makeText(requireContext(), "deleted", Toast.LENGTH_SHORT).show()
                 sharedViewModel.setGotoHomePageStatus(true)
 
@@ -156,7 +171,7 @@ class AddNoteFragment : Fragment() {
 
     override fun onStop() {
         super.onStop()
-        SharedPref.clearAll()
+        clearSharedPref()
     }
 
 }

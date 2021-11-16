@@ -1,13 +1,21 @@
 package com.example.notesapp.viewmodels
 
+import android.content.Context
 import android.net.Uri
+import android.os.Build
+import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.example.notesapp.Service.AuthenticationService
-import com.example.notesapp.Service.FireBaseDatabase
-import com.example.notesapp.Service.Storage
-import com.example.notesapp.Utils.Note
+import androidx.lifecycle.viewModelScope
+import com.example.notesapp.service.AuthenticationService
+import com.example.notesapp.service.DatabaseService
+import com.example.notesapp.service.FireBaseDatabase
+import com.example.notesapp.service.Storage
+import com.example.notesapp.service.roomdb.NoteEntity
+import kotlinx.coroutines.launch
+import okhttp3.internal.Util
 
 class HomeViewModel: ViewModel(){
     private val _profilePhotoFetch= MutableLiveData<Uri>()
@@ -19,8 +27,8 @@ class HomeViewModel: ViewModel(){
     private val _databaseReadingStatus = MutableLiveData<Array<String>>()
     val databaseReadingStatus = _databaseReadingStatus as LiveData<Array<String>>
 
-    private val _readNotesFromDatabaseStatus = MutableLiveData<MutableList<Note>>()
-    var readNotesFromDatabaseStatus=_readNotesFromDatabaseStatus as LiveData<MutableList<Note>>
+    private val _readNotesFromDatabaseStatus = MutableLiveData<MutableList<NoteEntity>>()
+    var readNotesFromDatabaseStatus=_readNotesFromDatabaseStatus as LiveData<MutableList<NoteEntity>>
 
     fun fetchProfile() {
         try {
@@ -37,17 +45,21 @@ class HomeViewModel: ViewModel(){
         }
     }
 
-    fun readUserFromDatabase(userid: String) {
-        FireBaseDatabase.readUser(userid) { username, email ->
-            _databaseReadingStatus.value = arrayOf(username,email)
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    fun readUserFromDatabase(userid: String, context: Context) {
+        if(com.example.notesapp.utils.Util.checkInternet(context)) {
+            FireBaseDatabase.readUser(userid) { username, email ->
+                _databaseReadingStatus.value = arrayOf(username, email)
+            }
         }
     }
 
-    fun readNotesFromDatabase(isDeleted: Boolean){
-        FireBaseDatabase.readNotes(isDeleted){ status, list->
-            if(status) {
-                _readNotesFromDatabaseStatus.value = list
-            }
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    fun readNotesFromDatabase(isDeleted: Boolean, context: Context){
+        viewModelScope.launch {
+            val noteList = DatabaseService().readNotes(false, context)
+            Log.d("listsize",noteList.size.toString())
+            _readNotesFromDatabaseStatus.value = noteList
         }
     }
 

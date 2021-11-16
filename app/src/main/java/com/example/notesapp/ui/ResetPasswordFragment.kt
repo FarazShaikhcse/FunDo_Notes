@@ -1,4 +1,4 @@
-package com.example.notesapp
+package com.example.notesapp.ui
 
 import android.os.Bundle
 import androidx.fragment.app.Fragment
@@ -11,12 +11,11 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import com.example.notesapp.R
-import com.example.notesapp.Utils.Util
+import com.example.notesapp.utils.Util
 import com.example.notesapp.viewmodels.ResetPasswordViewModel
 import com.example.notesapp.viewmodels.ResetPasswordViewModelFactory
 import com.example.notesapp.viewmodels.SharedViewModel
 import com.example.notesapp.viewmodels.SharedViewModelFactory
-import com.google.firebase.auth.FirebaseAuth
 
 
 class ResetPasswordFragment : Fragment() {

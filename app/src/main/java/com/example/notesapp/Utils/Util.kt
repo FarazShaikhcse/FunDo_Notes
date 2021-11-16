@@ -1,4 +1,4 @@
-package com.example.notesapp.Utils
+package com.example.notesapp.utils
 
 import android.app.Activity
 import android.app.Dialog
@@ -7,8 +7,6 @@ import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Build
 import android.util.Patterns
-import android.view.View
-import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.TextView
@@ -16,14 +14,10 @@ import androidx.annotation.RequiresApi
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.appcompat.widget.SearchView
-import androidx.core.content.ContextCompat.getSystemService
 import androidx.core.net.toUri
 import androidx.core.view.isVisible
 import androidx.drawerlayout.widget.DrawerLayout
-import androidx.recyclerview.widget.GridLayoutManager
-import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.notesapp.DeletedNotesFragment
 import com.example.notesapp.R
 import com.google.android.material.imageview.ShapeableImageView
 import com.squareup.picasso.Picasso
@@ -81,12 +75,9 @@ object Util {
     fun createDialog(context: Context): Dialog {
         val dialog = Dialog(context)
         dialog.setContentView(R.layout.custom_dialog)
-        var dailog_logout: Button = dialog.findViewById(R.id.dailogueLogout)
         var dialog_profile: ImageView = dialog.findViewById(R.id.dialogProfile)
-        var dailog_edit: ImageView = dialog.findViewById(R.id.editProfile)
         val dailog_email: TextView = dialog.findViewById(R.id.emailtv)
         val dailog_username: TextView = dialog.findViewById(R.id.usernametv)
-        val dialogClose: ImageView = dialog.findViewById(R.id.closeButton)
         val sharePrefName = SharedPref.get("name")
         val sharePrefEmail = SharedPref.get("email")
         val sharePrefUriString = SharedPref.get("uri")
@@ -157,49 +148,8 @@ object Util {
 
     }
 
-    fun loadNotesInLayoutType(
-        activity: Activity,
-        context: Context,
-        view: View,
-        adapter: TodoAdapter,
-        linearAdpater: TodoAdpaterLinear,
 
-        ) {
-        var gridrecyclerView: RecyclerView = view.findViewById(R.id.rvNotes)
-        gridrecyclerView.layoutManager = GridLayoutManager(context, 2)
-
-        var layout: ImageView = activity.findViewById(R.id.notesLayout)
-
-        var flag: Boolean
-        var count = SharedPref.get("counter")
-        if (count == "") {
-            flag = true
-        } else if (count == "true") {
-            flag = false
-        } else {
-            flag = true
-        }
-
-        if (flag) {
-            layout.setImageResource(R.drawable.ic_baseline_grid_on_24)
-            gridrecyclerView.isVisible = false
-            gridrecyclerView.layoutManager = LinearLayoutManager(context)
-            gridrecyclerView.adapter = linearAdpater
-            gridrecyclerView.isVisible = true
-            SharedPref.addString("counter", "true")
-
-        } else {
-            layout.setImageResource(R.drawable.ic_baseline_dehaze_24)
-            gridrecyclerView.isVisible = false
-            gridrecyclerView.layoutManager = GridLayoutManager(context, 2)
-            gridrecyclerView.adapter = adapter
-            gridrecyclerView.isVisible = true
-            SharedPref.addString("counter", "false")
-
-        }
-    }
-
-    fun checkLayout(gridrecyclerView: RecyclerView, adapter: TodoAdapter, layout: ImageView) {
+    fun checkLayout(gridrecyclerView: RecyclerView, adapter: NotesViewAdapter, layout: ImageView) {
         var count = SharedPref.get("counter")
         if (count == "") {
             gridrecyclerView.adapter = adapter

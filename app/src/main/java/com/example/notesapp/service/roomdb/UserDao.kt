@@ -1,4 +1,4 @@
-package com.example.notesapp.Utils
+package com.example.notesapp.service.roomdb
 
 import androidx.room.Dao
 import androidx.room.Insert

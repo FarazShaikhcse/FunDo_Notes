@@ -1,18 +1,26 @@
 package com.example.notesapp.viewmodels
 
+import android.content.Context
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.notesapp.MainActivity
-import com.example.notesapp.Service.AuthenticationService
-import com.example.notesapp.Service.FireBaseDatabase
-import com.example.notesapp.Utils.Note
-import com.example.notesapp.Utils.SharedPref
+import com.example.notesapp.service.DatabaseService
+import com.example.notesapp.service.FireBaseDatabase
+import com.example.notesapp.service.roomdb.NoteEntity
+import com.example.notesapp.utils.SharedPref
+import com.example.notesapp.utils.Util
+import kotlinx.coroutines.launch
+import java.time.LocalDateTime
 
-class DeletedNoteViewModel: ViewModel() {
+class DeletedNoteViewModel : ViewModel() {
 
-    private val _readNotesFromDatabaseStatus = MutableLiveData<MutableList<Note>>()
-    var readNotesFromDatabaseStatus = _readNotesFromDatabaseStatus as LiveData<MutableList<Note>>
+    private val _readNotesFromDatabaseStatus = MutableLiveData<MutableList<NoteEntity>>()
+    var readNotesFromDatabaseStatus =
+        _readNotesFromDatabaseStatus as LiveData<MutableList<NoteEntity>>
 
     private val _restoreNotesStatus = MutableLiveData<Boolean>()
     var restoreNotesStatus = _restoreNotesStatus as LiveData<Boolean>
@@ -20,28 +28,37 @@ class DeletedNoteViewModel: ViewModel() {
     private val _permNotesDeleteStatus = MutableLiveData<Boolean>()
     var permNotesDeleteStatus = _permNotesDeleteStatus as LiveData<Boolean>
 
-    fun readNotesFromDatabase(isDeleted: Boolean){
-        FireBaseDatabase.readNotes(isDeleted){ status, list->
-            if(status) {
-                _readNotesFromDatabaseStatus.value = list
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    fun readNotesFromDatabase(isDeleted: Boolean, context: Context) {
+        viewModelScope.launch {
+            val noteList = DatabaseService().readNotes(true, context)
+            _readNotesFromDatabaseStatus.value = noteList
+        }
+    }
+
+    fun restoreDeletedNotes(note: NoteEntity, context: Context) {
+        val time = LocalDateTime.now().toString()
+        if(Util.checkInternet(context)) {
+            FireBaseDatabase.restoreNotesFromDatabase(time, false) {
+
             }
         }
+        _restoreNotesStatus.value = MainActivity.roomDBClass.noteDao.tempDeleteNote(
+            SharedPref.get("fuid").toString(),
+            SharedPref.get("noteid").toString(), false, time
+        ) > 0
     }
 
-    fun restoreDeletedNotes(note: Note) {
-        FireBaseDatabase.restoreNotesFromDatabase(false, note){
-            if(it)
-                _restoreNotesStatus.value = it
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    fun permDeleteNotes(note: NoteEntity, context: Context) {
+        if(Util.checkInternet(context)) {
+            FireBaseDatabase.permDeleteNotesFromDatabase(true) {
+            }
         }
-        MainActivity.roomDBClass.noteDao.tempDeleteNote(SharedPref.get("fuid").toString(), SharedPref.get("noteid").toString(), false)
-    }
-
-    fun permDeleteNotes(note: Note) {
-        FireBaseDatabase.permDeleteNotesFromDatabase(true, note){
-            if(it)
-                _permNotesDeleteStatus.value = it
-        }
-        MainActivity.roomDBClass.noteDao.permDeleteNote(note.time, SharedPref.get("fuid").toString())
+        _permNotesDeleteStatus.value = MainActivity.roomDBClass.noteDao.permDeleteNote(
+            note.noteid,
+            SharedPref.get("fuid").toString()
+        ) > 0
     }
 
 }

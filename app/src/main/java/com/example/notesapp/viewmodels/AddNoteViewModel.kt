@@ -6,12 +6,15 @@ import androidx.annotation.RequiresApi
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.notesapp.MainActivity
-import com.example.notesapp.Service.AuthenticationService
-import com.example.notesapp.Service.DatabaseService
-import com.example.notesapp.Service.FireBaseDatabase
-import com.example.notesapp.Utils.Note
-import com.example.notesapp.Utils.SharedPref
+import com.example.notesapp.service.DatabaseService
+import com.example.notesapp.service.FireBaseDatabase
+import com.example.notesapp.utils.Note
+import com.example.notesapp.service.roomdb.NoteEntity
+import com.example.notesapp.utils.SharedPref
+import com.example.notesapp.utils.Util
+import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 
 class AddNoteViewModel : ViewModel() {
@@ -23,31 +26,37 @@ class AddNoteViewModel : ViewModel() {
     var databaseNoteDeletedStatus = _databaseNoteDeletedStatus as LiveData<Boolean>
 
     @RequiresApi(Build.VERSION_CODES.O)
-    fun addNotesToDatabase(note: Note, context: Context) {
-            _databaseNoteAddedStatus.value = DatabaseService().addNotesToDatabase(note,context)
+    fun addNotesToDatabase(note: NoteEntity, context: Context) {
+        viewModelScope.launch {
+            _databaseNoteAddedStatus.value = DatabaseService().addNotesToDatabase(note, context)
+        }
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun updateNotesInDatabase(note: Note, context: Context) {
-        FireBaseDatabase.updateNotesinDatabase(false, note) {
-            _databaseNoteUpdatedStatus.value = it
+
+        if(Util.checkInternet(context)) {
+            FireBaseDatabase.updateNotesinDatabase(false, note) {
+            }
         }
         val titleText = note.title
         val noteText = note.note
-        MainActivity.roomDBClass.noteDao.updateNote(titleText,noteText,
-            SharedPref.get("noteid").toString(), LocalDateTime.now().toString()
-        )
+        _databaseNoteUpdatedStatus.value = MainActivity.roomDBClass.noteDao.updateNote(titleText,noteText,
+            SharedPref.get("noteid").toString(), note.modifiedTime) > 0
     }
 
-    fun deleteNotesFromDatabase(titleText: String, noteText: String, requireContext: Context) {
-        FireBaseDatabase.tempDeleteNotesFromDatabase(false) {
-            _databaseNoteDeletedStatus.value = it
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    fun deleteNotesFromDatabase(titleText: String, noteText: String, context: Context) {
+        val time = LocalDateTime.now().toString()
+        if(Util.checkInternet(context)) {
+            FireBaseDatabase.tempDeleteNotesFromDatabase(false, time) {
+            }
         }
 
-        val uid = AuthenticationService.checkUser()
-
         if (titleText.isNotEmpty() && noteText.isNotEmpty()) {
-            MainActivity.roomDBClass.noteDao.tempDeleteNote(uid.toString(), SharedPref.get("noteid").toString(), true)
+            _databaseNoteDeletedStatus.value = MainActivity.roomDBClass.noteDao.tempDeleteNote(
+                SharedPref.get("fuid").toString(),
+                SharedPref.get("noteid").toString(), true, time)>0
 
         }
     }

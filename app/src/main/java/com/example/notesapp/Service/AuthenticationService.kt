@@ -1,15 +1,10 @@
-package com.example.notesapp.Service
+package com.example.notesapp.service
 
 import android.util.Log
-import com.example.notesapp.Utils.AuthStatus
-import com.example.notesapp.Utils.FirebaseUserToken
-import com.example.notesapp.Utils.UserLoginResult
+import com.example.notesapp.utils.AuthStatus
 import com.facebook.*
 import com.google.firebase.auth.FirebaseAuth
 import com.facebook.login.LoginManager
-import com.facebook.login.LoginResult
-import com.google.firebase.auth.FacebookAuthProvider
-
 
 object AuthenticationService {
     var uid: String = ""
@@ -22,15 +17,12 @@ object AuthenticationService {
         FirebaseAuth.getInstance().signInWithEmailAndPassword(email, password)
             .addOnCompleteListener {
                 if (it.isSuccessful) {
-
                     val user = AuthStatus(true, "Login successful")
                     listener(user)
                 } else {
-
                     val user = AuthStatus(false, it.exception?.message.toString())
                     listener(user)
                 }
-
             }
 
     }
@@ -67,13 +59,6 @@ object AuthenticationService {
             FirebaseAuth.getInstance().signOut()
     }
 
-    fun firebaseInstance(): FirebaseAuth {
-        return FirebaseAuth.getInstance()
-    }
-
-
-
-
 
     fun resetPassword(emailValue: String, listener: (AuthStatus) -> Unit) {
         FirebaseAuth.getInstance().sendPasswordResetEmail(emailValue)
@@ -94,9 +79,7 @@ object AuthenticationService {
 
     fun getCurrentUser() = FirebaseAuth.getInstance().currentUser
     fun getAuth() = FirebaseAuth.getInstance()
-    fun getAccessToken() = AccessToken.getCurrentAccessToken()
-    fun getCurrentUid(): String
-    {
+    fun getCurrentUid(): String {
         if (getAuth().uid != null)
             return FirebaseAuth.getInstance()!!.uid.toString()
         return ""

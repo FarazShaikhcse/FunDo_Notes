@@ -1,4 +1,4 @@
-package com.example.notesapp
+package com.example.notesapp.ui
 
 import android.os.Bundle
 import androidx.fragment.app.Fragment
@@ -8,8 +8,8 @@ import android.view.ViewGroup
 import android.os.Handler
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
-import com.example.notesapp.Service.AuthenticationService
-import com.example.notesapp.Utils.SharedPref
+import com.example.notesapp.R
+import com.example.notesapp.utils.SharedPref
 import com.example.notesapp.viewmodels.SharedViewModel
 import com.example.notesapp.viewmodels.SharedViewModelFactory
 
@@ -29,10 +29,8 @@ class SplashFragment : Fragment() {
         (requireActivity() as AppCompatActivity).supportActionBar?.hide()
         // Inflate the layout for this fragment
         Handler().postDelayed(Runnable {
-            if(AuthenticationService.checkUser()!=null) {
-
+            if(SharedPref.get("fuid").toString() != "") {
                 sharedViewModel.setGotoHomePageStatus(true)
-
             }
             else
                 sharedViewModel.setGoToLoginPageStatus(true)

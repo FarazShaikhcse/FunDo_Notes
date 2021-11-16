@@ -1,6 +1,3 @@
-package com.example.notesapp.Utils
+package com.example.notesapp.utils
 
-
-class User(val fullName:String?=null,val age:String?=null,val email:String?=null){
-
-}
+class User(val fullName: String? = null, val age: String? = null, val email: String? = null) {}

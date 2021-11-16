@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#E3D8D8"
-    tools:context=".AddNoteFragment">
+    tools:context=".ui.AddNoteFragment">
 
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton

@@ -1,17 +1,18 @@
-package com.example.notesapp
+package com.example.notesapp.ui
 
 import android.app.Dialog
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import androidx.fragment.app.Fragment
-import com.google.firebase.auth.FirebaseAuth
 
 import android.view.*
 import android.widget.*
 import androidx.activity.result.ActivityResultCallback
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
 import androidx.core.view.isVisible
@@ -19,8 +20,11 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.notesapp.Service.AuthenticationService
-import com.example.notesapp.Utils.*
+import com.example.notesapp.R
+import com.example.notesapp.service.AuthenticationService
+import com.example.notesapp.service.DatabaseService
+import com.example.notesapp.service.roomdb.NoteEntity
+import com.example.notesapp.utils.*
 import com.example.notesapp.viewmodels.HomeViewModel
 import com.example.notesapp.viewmodels.HomeViewModelFactory
 import com.example.notesapp.viewmodels.SharedViewModel
@@ -29,10 +33,9 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.imageview.ShapeableImageView
 import com.google.android.material.navigation.NavigationView
 import com.squareup.picasso.Picasso
-import java.util.*
 
 
-class HomeFragment : Fragment() {
+class HomeFragment : Fragment(), SearchView.OnCloseListener {
 
     lateinit var dialog: Dialog
     lateinit var userIcon: ShapeableImageView
@@ -43,24 +46,21 @@ class HomeFragment : Fragment() {
     private lateinit var sharedViewModel: SharedViewModel
     private lateinit var homeViewModel: HomeViewModel
     lateinit var getImage: ActivityResultLauncher<String>
-    lateinit var adapter: TodoAdapter
-    lateinit var linearAdpater: TodoAdpaterLinear
+    lateinit var adapter: NotesViewAdapter
+    lateinit var linearAdpater: NotesViewAdapter
     lateinit var gridrecyclerView: RecyclerView
-    var noteList = mutableListOf<Note>()
-    var tempList = mutableListOf<Note>()
+    var noteList = mutableListOf<NoteEntity>()
+    var tempList = mutableListOf<NoteEntity>()
     var email: String? = null
     var fullName: String? = null
 
-
-    private val auth by lazy {
-        FirebaseAuth.getInstance()
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setHasOptionsMenu(true)
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -68,7 +68,8 @@ class HomeFragment : Fragment() {
         // Inflate the layout for this fragment
         val view = inflater.inflate(R.layout.fragment_home, container, false)
         (requireActivity() as AppCompatActivity).supportActionBar?.show()
-        requireActivity().findViewById<NavigationView>(R.id.myNavMenu).getMenu().getItem(0).setChecked(true);
+        requireActivity().findViewById<NavigationView>(R.id.myNavMenu).getMenu().getItem(0)
+            .setChecked(true);
         var profilePhoto: Uri? = null
         sharedViewModel = ViewModelProvider(
             requireActivity(),
@@ -82,21 +83,29 @@ class HomeFragment : Fragment() {
         deleteBtn = requireActivity().findViewById(R.id.deleteButton)
         searchview = requireActivity().findViewById(R.id.searchView)
         addNotesButton = view.findViewById(R.id.addNotesButton)
-        adapter = TodoAdapter(tempList)
-        linearAdpater = TodoAdpaterLinear(tempList)
-        adapter.setOnItemClickListner(object :TodoAdapter.onItemClickListner{
+        adapter = NotesViewAdapter(tempList)
+        linearAdpater = NotesViewAdapter(tempList)
+        adapter.setOnItemClickListner(object : NotesViewAdapter.onItemClickListner {
             override fun onItemClick(position: Int) {
 
                 setValuesForUpdation(position)
-                Toast.makeText(requireContext(),"You clicked item ${position+1}",Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    requireContext(),
+                    "You clicked item ${position + 1}",
+                    Toast.LENGTH_SHORT
+                ).show()
                 sharedViewModel.setGoToAddNotesPageStatus(true)
             }
 
         })
-        linearAdpater.setOnItemClickListner(object :TodoAdpaterLinear.onItemClickListner{
+        linearAdpater.setOnItemClickListner(object : NotesViewAdapter.onItemClickListner {
             override fun onItemClick(position: Int) {
                 setValuesForUpdation(position)
-                Toast.makeText(requireContext(),"You clicked item ${position+1}",Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    requireContext(),
+                    "You clicked item ${position + 1}",
+                    Toast.LENGTH_SHORT
+                ).show()
                 sharedViewModel.setGoToAddNotesPageStatus(true)
             }
 
@@ -111,7 +120,7 @@ class HomeFragment : Fragment() {
                 homeViewModel.uploadProfile(uid, it)
             }
         )
-
+        searchview.setOnCloseListener(this)
         Util.loadToolBar(requireActivity(), "homefragment")
         observe()
         getUserDetails()
@@ -121,9 +130,11 @@ class HomeFragment : Fragment() {
         homeViewModel.fetchProfile()
         listeners()
         searchNotes()
-        Log.d("homefragment","userid"+SharedPref.get("fuid"))
+        Log.d("homefragment", "userid" + SharedPref.get("fuid"))
+        DatabaseService().sync(requireContext())
         return view
     }
+
     private fun getCheckedItem(navigationView: NavigationView): Int {
         val menu = navigationView.menu
         for (i in 0 until menu.size()) {
@@ -136,31 +147,12 @@ class HomeFragment : Fragment() {
     }
 
     private fun searchNotes() {
-        searchview.setOnQueryTextListener(object :SearchView.OnQueryTextListener{
+        searchview.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
                 TODO("Not yet implemented")
             }
-
             override fun onQueryTextChange(newText: String?): Boolean {
-                requireActivity().findViewById<TextView>(R.id.FunDo).isVisible = false
-                tempList.clear()
-
-                val searchTxt=newText!!.toLowerCase(Locale.getDefault())
-                if(searchTxt.isNotEmpty()){
-                    noteList.forEach {
-                        if(it.title.toLowerCase(Locale.getDefault()).contains(searchTxt)){
-                            tempList.add(it)
-                        }
-                    }
-                    gridrecyclerView.adapter!!.notifyDataSetChanged()
-                }
-                else{
-                    tempList.clear()
-                    tempList.addAll(noteList)
-                    gridrecyclerView.adapter!!.notifyDataSetChanged()
-
-                }
-
+                adapter.filter.filter(newText)
                 return false
             }
 
@@ -168,37 +160,22 @@ class HomeFragment : Fragment() {
     }
 
     private fun setValuesForUpdation(position: Int) {
-        SharedPref.setUpdateStatus("updateStatus",true)
-        SharedPref.updateNotePosition("position",position+1)
-        SharedPref.addString("title",noteList[position].title)
-        SharedPref.addString("note",noteList[position].note)
-        SharedPref.addString("noteid",noteList[position].time)
+        SharedPref.setUpdateStatus("updateStatus", true)
+        SharedPref.updateNotePosition("position", position + 1)
+        SharedPref.addString("title", noteList[position].title)
+        SharedPref.addString("note", noteList[position].content)
+        SharedPref.addString("noteid", noteList[position].noteid)
     }
 
     private fun getUserDetails() {
-        AuthenticationService.checkUser()?.let { homeViewModel.readUserFromDatabase(it) }
+        AuthenticationService.checkUser()
+            ?.let { homeViewModel.readUserFromDatabase(it, requireContext()) }
     }
 
     private fun getUserNotes() {
-        homeViewModel.readNotesFromDatabase(false)
+        homeViewModel.readNotesFromDatabase(false, requireContext())
     }
 
-    private fun checkLayout() {
-        var count = SharedPref.get("counter")
-        if (count == "") {
-            gridrecyclerView.adapter = adapter
-            gridrecyclerView.isVisible = true
-
-        } else if (count == "true") {
-            layout.setImageResource(R.drawable.ic_baseline_grid_on_24)
-            gridrecyclerView.isVisible = false
-
-        } else if (count == "false") {
-            layout.setImageResource(R.drawable.ic_baseline_dehaze_24)
-            gridrecyclerView.adapter = adapter
-            gridrecyclerView.isVisible = true
-        }
-    }
 
     private fun listeners() {
         userIcon.setOnClickListener {
@@ -215,7 +192,6 @@ class HomeFragment : Fragment() {
         dialog.findViewById<Button>(R.id.dailogueLogout).setOnClickListener {
             userIcon.setImageResource(R.drawable.avatar)
             dialog.findViewById<ImageView>(R.id.dialogProfile).setImageResource(R.drawable.avatar)
-            SharedPref.clearAll()
             dialog.dismiss()
             sharedViewModel.logout()
             sharedViewModel.setGoToLoginPageStatus(true)
@@ -229,6 +205,13 @@ class HomeFragment : Fragment() {
         layout.setOnClickListener {
 
             loadNotesInLayoutType()
+        }
+        searchview.setOnSearchClickListener {
+            userIcon.isVisible = false
+            layout.isVisible = false
+            requireActivity().findViewById<TextView>(R.id.FunDo).isVisible = false
+            searchview.maxWidth = Integer.MAX_VALUE
+
         }
     }
 
@@ -328,6 +311,13 @@ class HomeFragment : Fragment() {
     override fun onStart() {
         super.onStart()
         view?.findViewById<NavigationView>(R.id.myNavMenu)?.getMenu()?.getItem(0)?.setChecked(true);
+    }
+
+    override fun onClose(): Boolean {
+        userIcon.isVisible = true
+        layout.isVisible = true
+        requireActivity().findViewById<TextView>(R.id.FunDo).isVisible = true
+        return false
     }
 
 

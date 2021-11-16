@@ -1,17 +1,20 @@
-package com.example.notesapp.Service
+package com.example.notesapp.service
 
 
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
-import com.example.notesapp.Utils.Note
-import com.example.notesapp.Utils.SharedPref
-import com.example.notesapp.Utils.User
+import com.example.notesapp.utils.Note
+import com.example.notesapp.service.roomdb.NoteEntity
+import com.example.notesapp.utils.SharedPref
+import com.example.notesapp.utils.User
 import com.google.firebase.firestore.DocumentReference
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import org.json.JSONObject
 import java.time.LocalDateTime
+import kotlin.coroutines.suspendCoroutine
 
 
 class FireBaseDatabase {
@@ -44,82 +47,75 @@ class FireBaseDatabase {
 
             db.collection("users").document(userid.toString())
                 .get().addOnSuccessListener {
-                    listener(it.get("name").toString(),it.get("email").toString())
+                    listener(it.get("name").toString(), it.get("email").toString())
                 }
                 .addOnFailureListener {
                     Log.w("Firebasedatabase", "Error getting documents.", it)
 
                 }
-            listener("Username","email")
+            listener("Username", "email")
         }
 
         @RequiresApi(Build.VERSION_CODES.O)
-        fun addNotetoDatabase(note: Note, listener: (Boolean) -> Unit) {
-            val db = FirebaseFirestore.getInstance()
+        suspend fun addNotetoDatabase(note: NoteEntity): Boolean {
+            return suspendCoroutine { cont ->
+                val db = FirebaseFirestore.getInstance()
 
-            db.collection("users").document(AuthenticationService.checkUser().toString())
-                .collection("notes")
-                .document(note.time).set(note).addOnSuccessListener {
-                    listener(true)
-                }
-                .addOnFailureListener {
-                    listener(false)
-                }
-
-
-        }
-
-        fun readNotes(isDeleted: Boolean, listener: (Boolean, MutableList<Note>) -> Unit) {
-            var list = mutableListOf<Note>()
-            val db = FirebaseFirestore.getInstance()
-            db.collection("users").document(AuthenticationService.checkUser().toString())
-                .collection("notes").orderBy("time", Query.Direction.DESCENDING)
-                .whereEqualTo("deleted",isDeleted)
-                .get().addOnSuccessListener { result ->
-                    for (doc in result) {
-                        val title = doc.get("title").toString()
-                        val note = doc.get("note").toString()
-                        val time = doc.get("time").toString()
-                        val modifiedTime = doc.get("modifiedTime").toString()
-                        val userNote = Note(title, note, time, modifiedTime)
-                        list.add(userNote)
+                db.collection("users").document(AuthenticationService.checkUser().toString())
+                    .collection("notes")
+                    .document(note.noteid).set(Note(note.title, note.content, note.noteid,
+                        note.noteid)).addOnSuccessListener {
+                        cont.resumeWith(Result.success(true))
                     }
-                    listener(true, list)
-                }
-                .addOnFailureListener { exception ->
-                    Log.w("Firebasedatabase", "Error getting documents.", exception)
-                    listener(false, list)
-                }
+                    .addOnFailureListener {
+                        cont.resumeWith(Result.failure(it))
+                    }
+            }
         }
 
-        fun getSelectedNotesDocReference(isDeleted: Boolean, listener: (DocumentReference?) -> Unit) {
+        suspend fun readNotes(isDeleted: Boolean): MutableList<NoteEntity>{
+            return suspendCoroutine { cont ->
+                var list = mutableListOf<NoteEntity>()
+                val db = FirebaseFirestore.getInstance()
+                db.collection("users").document(AuthenticationService.checkUser().toString())
+                    .collection("notes").orderBy("time", Query.Direction.DESCENDING)
+                    .whereEqualTo("deleted", isDeleted)
+                    .get().addOnSuccessListener { result ->
+                        for (doc in result) {
+                            val title = doc.get("title").toString()
+                            val note = doc.get("note").toString()
+                            val time = doc.get("time").toString()
+                            val modifiedTime = doc.get("modifiedTime").toString()
+                            val userNote = NoteEntity(
+                                time, SharedPref.get("fuid").toString(),
+                                title, note, modifiedTime, isDeleted
+                            )
+                            list.add(userNote)
+                        }
+                        cont.resumeWith(Result.success(list))
+                    }
+                    .addOnFailureListener { exception ->
+                        Log.w("Firebasedatabase", "Error getting documents.", exception)
+                        cont.resumeWith(Result.failure(exception))
+                    }
+            }
+        }
+
+        fun getSelectedNotesDocReference(
+            isDeleted: Boolean,
+            listener: (DocumentReference?) -> Unit
+        ) {
             val pos = SharedPref.getUpdateNotePosition("position")
             val db = FirebaseFirestore.getInstance()
-//            var count = 1
-//            var reference: DocumentReference? = null
-//            db.collection("users").document(Authentication.checkUser().toString())
-//                .collection("notes").orderBy("time", Query.Direction.DESCENDING)
-//                .whereEqualTo("deleted",isDeleted)
-//                .get().addOnSuccessListener { result ->
-//                    for (doc in result) {
-//                        if (count == pos) {
-//                            listener(doc.reference)
-//                            break
-//                        }
-//                        count += 1
-//                    }
-//                }.addOnFailureListener {
-//                    listener(null)
-//                }
-            Log.d("FirebaseReference",SharedPref.get("noteid").toString())
+            Log.d("FirebaseReference", SharedPref.get("noteid").toString())
             db.collection("users").document(AuthenticationService.checkUser().toString())
                 .collection("notes").document(SharedPref.get("noteid").toString()).get()
-                .addOnSuccessListener {
-                        result -> listener(result.reference)
+                .addOnSuccessListener { result ->
+                    listener(result.reference)
                 }
-                .addOnFailureListener{
+                .addOnFailureListener {
                     listener(null)
-                    Log.w("Firebasedatabase", "get selected notes Error getting document"+it)
+                    Log.w("Firebasedatabase", "get selected notes Error getting document" + it)
                 }
 
         }
@@ -127,7 +123,7 @@ class FireBaseDatabase {
         @RequiresApi(Build.VERSION_CODES.O)
         fun updateNotesinDatabase(isDeleted: Boolean, note: Note, listener: (Boolean) -> Unit) {
             val updateData = hashMapOf(
-                "modifiedTime" to LocalDateTime.now().toString(),
+                "modifiedTime" to note.modifiedTime,
                 "note" to note.note,
                 "title" to note.title
             )
@@ -137,7 +133,7 @@ class FireBaseDatabase {
                         listener(true)
                     }.addOnFailureListener {
                         listener(false)
-                        Log.w("Firebasedatabase", "update notes Error getting document"+it)
+                        Log.w("Firebasedatabase", "update notes Error getting document" + it)
                     }
                 } else
                     listener(false)
@@ -145,11 +141,14 @@ class FireBaseDatabase {
         }
 
 
-        fun tempDeleteNotesFromDatabase(isDeleted: Boolean, listener: (Boolean) -> Unit) {
-
+        fun tempDeleteNotesFromDatabase(isDeleted: Boolean, time: String, listener: (Boolean) -> Unit) {
+            val updateData = hashMapOf(
+                "modifiedTime" to time,
+                "deleted" to !isDeleted
+            )
             getSelectedNotesDocReference(isDeleted) {
                 if (it != null)
-                    it.update("deleted",!isDeleted)
+                    it.update(updateData as Map<String, Any>)
                         .addOnFailureListener {
                             listener(false)
                         }.addOnSuccessListener {
@@ -160,11 +159,19 @@ class FireBaseDatabase {
             }
 
         }
-        fun restoreNotesFromDatabase(isDeleted: Boolean, note: Note, listener: (Boolean) -> Unit) {
 
+        fun restoreNotesFromDatabase(
+            time: String,
+            isDeleted: Boolean,
+            listener: (Boolean) -> Unit
+        ) {
+            val updateData = hashMapOf(
+                "modifiedTime" to time,
+                "deleted" to !isDeleted
+            )
             getSelectedNotesDocReference(!isDeleted) {
                 if (it != null)
-                    it.update("deleted",isDeleted)
+                    it.update(updateData as Map<String, Any>)
                         .addOnFailureListener {
                             listener(false)
                         }.addOnSuccessListener {
@@ -176,7 +183,7 @@ class FireBaseDatabase {
 
         }
 
-        fun addFbDataToDB(jsonObject: JSONObject?){
+        fun addFbDataToDB(jsonObject: JSONObject?) {
             val user = hashMapOf(
                 "userid" to AuthenticationService.checkUser(),
                 "email" to jsonObject?.getString("email"),
@@ -186,7 +193,10 @@ class FireBaseDatabase {
             val db = FirebaseFirestore.getInstance()
             db.collection("users").document(AuthenticationService.checkUser()!!).set(user)
                 .addOnSuccessListener { documentReference ->
-                    Log.w("Firebasedatabase", "DocumentSnapshot added with ID:${documentReference}")
+                    Log.w(
+                        "Firebasedatabase",
+                        "DocumentSnapshot added with ID:${documentReference}"
+                    )
 
                 }
                 .addOnFailureListener { e ->
@@ -195,7 +205,10 @@ class FireBaseDatabase {
                 }
         }
 
-        fun permDeleteNotesFromDatabase(isDeleted: Boolean, note: Note, listener: (Boolean) -> Unit) {
+        fun permDeleteNotesFromDatabase(
+            isDeleted: Boolean,
+            listener: (Boolean) -> Unit
+        ) {
             getSelectedNotesDocReference(isDeleted) {
                 if (it != null)
                     it.delete()
@@ -210,8 +223,25 @@ class FireBaseDatabase {
             }
         }
 
+        suspend fun checkNote(noteid: String): DocumentSnapshot {
+            return suspendCoroutine { cont ->
+                val db = FirebaseFirestore.getInstance()
+                db.collection("users").document(AuthenticationService.checkUser().toString())
+                    .collection("notes").document(noteid).get()
+                    .addOnSuccessListener {
+                        if(it.exists())
+                            cont.resumeWith(Result.success(it))
+
+                    }
+                    .addOnFailureListener{
+                        cont.resumeWith(Result.failure(it))
+                    }
+            }
+        }
+
     }
 
 
 }
+
 
