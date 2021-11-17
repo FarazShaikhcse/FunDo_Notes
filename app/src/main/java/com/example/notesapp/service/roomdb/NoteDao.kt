@@ -6,11 +6,8 @@ import androidx.room.*
 interface NoteDao {
 
 
-    @Query("Select * from notes where uid=:uid and deleted=:isDeleted")
+    @Query("Select * from notes where uid=:uid and deleted=:isDeleted ORDER BY modifiedtime DESC")
     fun readNotes(uid:String, isDeleted: Boolean):MutableList<NoteEntity>
-
-    @Query("Select * from notes where noteid=:noteid")
-    fun readNote(noteid: String):MutableList<NoteEntity>
 
     @Query("Select * from notes where uid=:uid")
     fun readAllNotes(uid: String):MutableList<NoteEntity>

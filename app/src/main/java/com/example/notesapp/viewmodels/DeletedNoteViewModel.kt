@@ -54,11 +54,14 @@ class DeletedNoteViewModel : ViewModel() {
         if(Util.checkInternet(context)) {
             FireBaseDatabase.permDeleteNotesFromDatabase(true) {
             }
+            _permNotesDeleteStatus.value = MainActivity.roomDBClass.noteDao.permDeleteNote(
+                note.noteid,
+                SharedPref.get("fuid").toString()
+            ) > 0
         }
-        _permNotesDeleteStatus.value = MainActivity.roomDBClass.noteDao.permDeleteNote(
-            note.noteid,
-            SharedPref.get("fuid").toString()
-        ) > 0
+        else
+            _permNotesDeleteStatus.value = false
+
     }
 
 }

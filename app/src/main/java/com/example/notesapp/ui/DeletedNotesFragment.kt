@@ -95,6 +95,10 @@ class DeletedNotesFragment : Fragment() {
                 Toast.makeText(requireContext(), "Deleted successfully", Toast.LENGTH_SHORT).show()
                 deletedNoteViewModel.readNotesFromDatabase(true, requireContext())
             }
+            else{
+                Toast.makeText(requireContext(), "Internet connection required"
+                    , Toast.LENGTH_SHORT).show()
+            }
         }
 
         return view

@@ -25,20 +25,6 @@ class DatabaseService {
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     suspend fun readNotes(isDeleted: Boolean, context: Context): MutableList<NoteEntity> {
-        // var tempList = mutableListOf<NotesKey>()
-//        var listFromRoom: MutableList<NoteEntity>
-//
-//        return withContext(Dispatchers.IO) {
-//            listFromRoom =
-//                MainActivity.roomDBClass.noteDao.readNotes(SharedPref.get("fuid").toString(), isDeleted)
-//            Log.d("roomNoteSize", listFromRoom.size.toString())
-//
-//            for (i in listFromRoom) {
-//                val note = NotesKey(i.title, i.note, i.fid, i.deleted, i.modifiedTime)
-//                tempList.add(note)
-//            }
-//            listFromRoom
-//        }
         return withContext(Dispatchers.IO) {
             val roomNoteList = MainActivity.roomDBClass.noteDao.readNotes(
                 SharedPref.get("fuid").toString(),
@@ -60,23 +46,22 @@ class DatabaseService {
                 firebasenoteid.add(note.noteid)
             }
             for (note in noteList) {
-
-
-
                 if ((note.noteid !in firebasenoteid)) {
 
                     val status = FireBaseDatabase.addNotetoDatabase(note)
-                    Log.d("addstatus",status.toString())
+                    Log.d("addstatus", status.toString())
                 } else {
                     val index = firebasenoteid.indexOf(note.noteid)
                     if (firebaseNoteList[index].modifiedTime.compareTo(note.modifiedTime) > 0) {
                         MainActivity.roomDBClass.noteDao.updateNotes(
                             firebaseNoteList[index].title,
-                            firebaseNoteList[index].content, firebaseNoteList[index].noteid,
-                            firebaseNoteList[index].modifiedTime, firebaseNoteList[index].deleted as Boolean
+                            firebaseNoteList[index].content,
+                            firebaseNoteList[index].noteid,
+                            firebaseNoteList[index].modifiedTime,
+                            firebaseNoteList[index].deleted as Boolean
                         )
 
-                    } else if(firebaseNoteList[index].modifiedTime.compareTo(note.modifiedTime) < 0) {
+                    } else if (firebaseNoteList[index].modifiedTime.compareTo(note.modifiedTime) < 0) {
                         val updateData = hashMapOf(
                             "modifiedTime" to note.modifiedTime,
                             "note" to note.content,
@@ -138,7 +123,7 @@ class DatabaseService {
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun sync(context: Context?) {
-        GlobalScope.launch(Dispatchers.IO){
+        GlobalScope.launch(Dispatchers.IO) {
             if (Util.checkInternet(context!!)) {
                 var firebaseNoteList = mutableListOf<NoteEntity>()
                 if (Util.checkInternet(context)) {

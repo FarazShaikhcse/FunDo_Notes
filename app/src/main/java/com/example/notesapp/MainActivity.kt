@@ -1,15 +1,20 @@
 package com.example.notesapp
 
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.MenuItem
 import android.widget.ImageView
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.lifecycle.ViewModelProvider
 import androidx.room.Room
+import com.example.notesapp.service.DatabaseService
 import com.example.notesapp.service.RoomDatabase
 import com.example.notesapp.ui.*
 import com.example.notesapp.utils.SharedPref
@@ -30,11 +35,13 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     lateinit var navMenu: NavigationView
     lateinit var drawerLayout: DrawerLayout
     lateinit var toolbar: androidx.appcompat.widget.Toolbar
+    lateinit var mainHandler: Handler
 
     private lateinit var sharedViewModel: SharedViewModel
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        mainHandler = Handler(Looper.getMainLooper())
         FacebookSdk.sdkInitialize(FacebookSdk.getApplicationContext())
         AppEventsLogger.activateApp(application)
         profileIcon = findViewById(R.id.userProfile)
@@ -175,7 +182,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 Toast.makeText(applicationContext, "Clicked reminder menu", Toast.LENGTH_LONG)
                     .show()
             }
-            R.id.menuSettings -> {
+            R.id.menuLabel -> {
                 Toast.makeText(applicationContext, "Clicked settings menu", Toast.LENGTH_LONG)
                     .show()
             }
@@ -213,6 +220,22 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         return super.onOptionsItemSelected(item)
     }
 
+    private val syncNotes = object : Runnable {
+        @RequiresApi(Build.VERSION_CODES.O)
+        override fun run() {
+            DatabaseService().sync(applicationContext)
+            mainHandler.postDelayed(this, 30000)
+        }
+    }
+    override fun onPause() {
+        super.onPause()
+        mainHandler.removeCallbacks(syncNotes)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        mainHandler.post(syncNotes)
+    }
 
 }
 

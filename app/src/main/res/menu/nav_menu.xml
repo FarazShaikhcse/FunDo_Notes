@@ -13,6 +13,13 @@
             android:icon="@drawable/ic_baseline_alarm_24"/>
     </group>
     <group android:checkableBehavior="single"
+        android:id="@+id/group4">
+        <item
+            android:id="@+id/menuLabel"
+            android:icon="@drawable/ic_baseline_label_important_24"
+            android:title="Add Label" />
+    </group>
+    <group android:checkableBehavior="single"
         android:id="@+id/group2">
         <item
             android:id="@+id/menuAddNotes"
@@ -26,11 +33,5 @@
             android:icon="@drawable/ic_baseline_delete_24"
             android:title="Deleted" />
     </group>
-    <group android:checkableBehavior="single"
-        android:id="@+id/group4">
-        <item
-            android:id="@+id/menuSettings"
-            android:icon="@drawable/ic_baseline_settings_24"
-            android:title="Settings" />
-    </group>
+
 </menu>
