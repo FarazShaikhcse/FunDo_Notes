@@ -37,6 +37,9 @@ class SharedViewModel : ViewModel() {
     private val _gotoDeletedNotesPageStatus = MutableLiveData<Boolean>()
     val gotoDeletedNotesPageStatus = _gotoDeletedNotesPageStatus as LiveData<Boolean>
 
+    private val _gotoAddLabelPageStatus = MutableLiveData<Boolean>()
+    val gotoAddLabelPageStatus = _gotoAddLabelPageStatus as LiveData<Boolean>
+
 
     fun setGotoHomePageStatus(status: Boolean) {
         Log.d("loginStatus", "Home page involked")
@@ -62,6 +65,10 @@ class SharedViewModel : ViewModel() {
 
     fun setGoToDeletedNotesPageStatus(status: Boolean) {
         _gotoDeletedNotesPageStatus.value = status
+    }
+
+    fun setGoToAddLabelPageStatus(status: Boolean) {
+        _gotoAddLabelPageStatus.value = status
     }
 
     fun addUserToDatabase(user: User) {

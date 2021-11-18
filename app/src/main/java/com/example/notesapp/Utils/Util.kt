@@ -165,8 +165,9 @@ object Util {
             gridrecyclerView.isVisible = true
         }
     }
+
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-    fun checkInternet(context: Context): Boolean{
+    fun checkInternet(context: Context): Boolean {
         val connectivityManager =
             context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
 

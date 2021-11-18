@@ -35,20 +35,22 @@ class AddNoteViewModel : ViewModel() {
     @RequiresApi(Build.VERSION_CODES.O)
     fun updateNotesInDatabase(note: Note, context: Context) {
 
-        if(Util.checkInternet(context)) {
+        if (Util.checkInternet(context)) {
             FireBaseDatabase.updateNotesinDatabase(false, note) {
             }
         }
         val titleText = note.title
         val noteText = note.note
-        _databaseNoteUpdatedStatus.value = MainActivity.roomDBClass.noteDao.updateNote(titleText,noteText,
-            SharedPref.get("noteid").toString(), note.modifiedTime) > 0
+        _databaseNoteUpdatedStatus.value = MainActivity.roomDBClass.noteDao.updateNote(
+            titleText, noteText,
+            SharedPref.get("noteid").toString(), note.modifiedTime
+        ) > 0
     }
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     fun deleteNotesFromDatabase(titleText: String, noteText: String, context: Context) {
         val time = LocalDateTime.now().toString()
-        if(Util.checkInternet(context)) {
+        if (Util.checkInternet(context)) {
             FireBaseDatabase.tempDeleteNotesFromDatabase(false, time) {
             }
         }
@@ -56,7 +58,8 @@ class AddNoteViewModel : ViewModel() {
         if (titleText.isNotEmpty() && noteText.isNotEmpty()) {
             _databaseNoteDeletedStatus.value = MainActivity.roomDBClass.noteDao.tempDeleteNote(
                 SharedPref.get("fuid").toString(),
-                SharedPref.get("noteid").toString(), true, time)>0
+                SharedPref.get("noteid").toString(), true, time
+            ) > 0
 
         }
     }

@@ -11,5 +11,5 @@ data class UserEntity(
     @ColumnInfo(name = "firebaseuid") var firebaseuid: String,
     @ColumnInfo(name = "name") var name: String,
     @ColumnInfo(name = "age") var age: String,
-    @ColumnInfo(name = "email") var email : String
+    @ColumnInfo(name = "email") var email: String
 )

@@ -5,6 +5,7 @@ import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
 import com.example.notesapp.MainActivity
+import com.example.notesapp.service.roomdb.LabelEntity
 import com.example.notesapp.service.roomdb.NoteEntity
 import com.example.notesapp.utils.SharedPref
 import com.example.notesapp.utils.Util
@@ -153,6 +154,29 @@ class DatabaseService {
             }
         }
 
+    }
+
+    suspend fun getLabelFromDatabase(context: Context): MutableList<String?> {
+        return withContext(Dispatchers.IO) {
+            var list : MutableList<String?> = arrayListOf()
+            if (Util.checkInternet(context)) {
+               list = FireBaseDatabase.getLabelsfromFirestore()
+            }
+            list
+
+        }
+
+    }
+
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    suspend fun addLabelToDatabase(label: LabelEntity, context: Context): Boolean {
+        return withContext(Dispatchers.IO) {
+            var status = false
+            if (Util.checkInternet(context)) {
+                status = FireBaseDatabase.addLabeltoFirestore(label)
+            }
+            status
+        }
     }
 
 }

@@ -2,14 +2,12 @@ package com.example.notesapp.service
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
-import com.example.notesapp.service.roomdb.NoteDao
-import com.example.notesapp.service.roomdb.NoteEntity
-import com.example.notesapp.service.roomdb.UserDao
-import com.example.notesapp.service.roomdb.UserEntity
+import com.example.notesapp.service.roomdb.*
 
 
-@Database(entities = [NoteEntity::class, UserEntity::class],version = 5)
+@Database(entities = [NoteEntity::class, UserEntity::class, LabelEntity::class],version = 6)
 abstract class RoomDatabase:RoomDatabase() {
     abstract val noteDao: NoteDao
     abstract val userDao: UserDao
+    abstract val labelDao: LabelDao
 }

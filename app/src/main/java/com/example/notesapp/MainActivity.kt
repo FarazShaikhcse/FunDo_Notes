@@ -23,6 +23,8 @@ import com.example.notesapp.viewmodels.SharedViewModelFactory
 import com.facebook.FacebookSdk
 import com.facebook.appevents.AppEventsLogger
 import com.google.android.material.navigation.NavigationView
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
 
@@ -35,13 +37,11 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     lateinit var navMenu: NavigationView
     lateinit var drawerLayout: DrawerLayout
     lateinit var toolbar: androidx.appcompat.widget.Toolbar
-    lateinit var mainHandler: Handler
 
     private lateinit var sharedViewModel: SharedViewModel
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        mainHandler = Handler(Looper.getMainLooper())
         FacebookSdk.sdkInitialize(FacebookSdk.getApplicationContext())
         AppEventsLogger.activateApp(application)
         profileIcon = findViewById(R.id.userProfile)
@@ -111,7 +111,20 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     gotoDeleteNotesPage()
                 }
             })
+        sharedViewModel.gotoAddLabelPageStatus.observe(this@MainActivity,
+            {
+                if (it) {
+                    gotoAddLabelPage()
+                }
+            })
 
+    }
+
+    private fun gotoAddLabelPage() {
+        supportFragmentManager.beginTransaction().apply {
+            replace(R.id.flFragment, AddLabelFragment())
+            commit()
+        }
     }
 
     private fun gotoDeleteNotesPage() {
@@ -183,8 +196,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     .show()
             }
             R.id.menuLabel -> {
-                Toast.makeText(applicationContext, "Clicked settings menu", Toast.LENGTH_LONG)
-                    .show()
+                sharedViewModel.setGoToAddLabelPageStatus(true)
             }
             R.id.menuNotes -> {
                 Toast.makeText(applicationContext, "Clicked on notes", Toast.LENGTH_LONG).show()
@@ -220,23 +232,11 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         return super.onOptionsItemSelected(item)
     }
 
-    private val syncNotes = object : Runnable {
-        @RequiresApi(Build.VERSION_CODES.O)
-        override fun run() {
-            DatabaseService().sync(applicationContext)
-            mainHandler.postDelayed(this, 30000)
-        }
+    override fun onDestroy() {
+        super.onDestroy()
+        SharedPref.addString("start","true")
     }
-    override fun onPause() {
-        super.onPause()
-        mainHandler.removeCallbacks(syncNotes)
-    }
-
-    override fun onResume() {
-        super.onResume()
-        mainHandler.post(syncNotes)
-    }
-
+    
 }
 
 

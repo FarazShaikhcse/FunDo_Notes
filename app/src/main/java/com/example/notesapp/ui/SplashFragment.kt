@@ -29,10 +29,9 @@ class SplashFragment : Fragment() {
         (requireActivity() as AppCompatActivity).supportActionBar?.hide()
         // Inflate the layout for this fragment
         Handler().postDelayed(Runnable {
-            if(SharedPref.get("fuid").toString() != "") {
+            if (SharedPref.get("fuid").toString() != "") {
                 sharedViewModel.setGotoHomePageStatus(true)
-            }
-            else
+            } else
                 sharedViewModel.setGoToLoginPageStatus(true)
         }, 1500)
 

@@ -4,6 +4,8 @@ import android.app.Dialog
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import androidx.fragment.app.Fragment
 
@@ -25,14 +27,13 @@ import com.example.notesapp.service.AuthenticationService
 import com.example.notesapp.service.DatabaseService
 import com.example.notesapp.service.roomdb.NoteEntity
 import com.example.notesapp.utils.*
-import com.example.notesapp.viewmodels.HomeViewModel
-import com.example.notesapp.viewmodels.HomeViewModelFactory
-import com.example.notesapp.viewmodels.SharedViewModel
-import com.example.notesapp.viewmodels.SharedViewModelFactory
+import com.example.notesapp.viewmodels.*
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.imageview.ShapeableImageView
 import com.google.android.material.navigation.NavigationView
 import com.squareup.picasso.Picasso
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 
 
 class HomeFragment : Fragment(), SearchView.OnCloseListener {
@@ -45,10 +46,12 @@ class HomeFragment : Fragment(), SearchView.OnCloseListener {
     lateinit var addNotesButton: FloatingActionButton
     private lateinit var sharedViewModel: SharedViewModel
     private lateinit var homeViewModel: HomeViewModel
+    private lateinit var addLabelViewModel: AddLabelViewModel
     lateinit var getImage: ActivityResultLauncher<String>
     lateinit var adapter: NotesViewAdapter
     lateinit var linearAdpater: NotesViewAdapter
     lateinit var gridrecyclerView: RecyclerView
+    lateinit var mainHandler: Handler
     var noteList = mutableListOf<NoteEntity>()
     var tempList = mutableListOf<NoteEntity>()
     var email: String? = null
@@ -71,10 +74,16 @@ class HomeFragment : Fragment(), SearchView.OnCloseListener {
         requireActivity().findViewById<NavigationView>(R.id.myNavMenu).getMenu().getItem(0)
             .setChecked(true);
         var profilePhoto: Uri? = null
+        mainHandler = Handler(Looper.getMainLooper())
         sharedViewModel = ViewModelProvider(
             requireActivity(),
             SharedViewModelFactory()
         )[SharedViewModel::class.java]
+        addLabelViewModel =
+            ViewModelProvider(
+                requireActivity(),
+                AddLabelViewModelFactory()
+            )[AddLabelViewModel::class.java]
         homeViewModel =
             ViewModelProvider(requireActivity(), HomeViewModelFactory())[HomeViewModel::class.java]
         dialog = Util.createDialog(requireContext())
@@ -135,22 +144,13 @@ class HomeFragment : Fragment(), SearchView.OnCloseListener {
         return view
     }
 
-    private fun getCheckedItem(navigationView: NavigationView): Int {
-        val menu = navigationView.menu
-        for (i in 0 until menu.size()) {
-            val item = menu.getItem(i)
-            if (item.isChecked) {
-                return i
-            }
-        }
-        return -1
-    }
 
     private fun searchNotes() {
         searchview.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
                 TODO("Not yet implemented")
             }
+
             override fun onQueryTextChange(newText: String?): Boolean {
                 adapter.filter.filter(newText)
                 return false
@@ -275,6 +275,20 @@ class HomeFragment : Fragment(), SearchView.OnCloseListener {
             Log.d("reading notes", "Size of note  list is" + noteList.size)
 
         }
+        addLabelViewModel.getLabelStatus.observe(viewLifecycleOwner) {
+
+
+            val navigationView = requireActivity().findViewById<NavigationView>(R.id.myNavMenu)
+            val menu: Menu = navigationView.getMenu()
+            for (i in it) {
+                if((SharedPref.get(i!!).toString() == "") or (SharedPref.get("start").toString() == "true"))  {
+                    menu.add(i)
+                    SharedPref.addString(i.toString(), "updated")
+                }
+            }
+            SharedPref.addString("start","false")
+        }
+
     }
 
     private fun loadNotesInLayoutType() {
@@ -311,7 +325,9 @@ class HomeFragment : Fragment(), SearchView.OnCloseListener {
     override fun onStart() {
         super.onStart()
         view?.findViewById<NavigationView>(R.id.myNavMenu)?.getMenu()?.getItem(0)?.setChecked(true);
+
     }
+
 
     override fun onClose(): Boolean {
         userIcon.isVisible = true
@@ -320,5 +336,24 @@ class HomeFragment : Fragment(), SearchView.OnCloseListener {
         return false
     }
 
+    private val syncNotes = object : Runnable {
+        @RequiresApi(Build.VERSION_CODES.O)
+        override fun run() {
+            DatabaseService().sync(requireContext())
+            mainHandler.postDelayed(this, 120000)
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        mainHandler.removeCallbacks(syncNotes)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        addLabelViewModel.getLabelsFromDatabase(requireContext())
+        mainHandler.post(syncNotes)
+
+    }
 
 }

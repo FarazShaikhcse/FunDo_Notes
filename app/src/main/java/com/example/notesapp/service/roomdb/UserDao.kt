@@ -7,6 +7,5 @@ import androidx.room.Insert
 interface UserDao {
 
     @Insert
-    fun registerUser(user: UserEntity):Long
-
+    fun registerUser(user: UserEntity): Long
 }

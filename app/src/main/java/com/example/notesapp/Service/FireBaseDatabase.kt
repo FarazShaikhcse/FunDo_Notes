@@ -4,6 +4,7 @@ package com.example.notesapp.service
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
+import com.example.notesapp.service.roomdb.LabelEntity
 import com.example.notesapp.utils.Note
 import com.example.notesapp.service.roomdb.NoteEntity
 import com.example.notesapp.utils.SharedPref
@@ -63,8 +64,12 @@ class FireBaseDatabase {
 
                 db.collection("users").document(AuthenticationService.checkUser().toString())
                     .collection("notes")
-                    .document(note.noteid).set(Note(note.title, note.content, note.noteid,
-                        note.noteid)).addOnSuccessListener {
+                    .document(note.noteid).set(
+                        Note(
+                            note.title, note.content, note.noteid,
+                            note.noteid
+                        )
+                    ).addOnSuccessListener {
                         cont.resumeWith(Result.success(true))
                     }
                     .addOnFailureListener {
@@ -73,7 +78,7 @@ class FireBaseDatabase {
             }
         }
 
-        suspend fun readNotes(isDeleted: Boolean): MutableList<NoteEntity>{
+        suspend fun readNotes(isDeleted: Boolean): MutableList<NoteEntity> {
             return suspendCoroutine { cont ->
                 var list = mutableListOf<NoteEntity>()
                 val db = FirebaseFirestore.getInstance()
@@ -141,7 +146,11 @@ class FireBaseDatabase {
         }
 
 
-        fun tempDeleteNotesFromDatabase(isDeleted: Boolean, time: String, listener: (Boolean) -> Unit) {
+        fun tempDeleteNotesFromDatabase(
+            isDeleted: Boolean,
+            time: String,
+            listener: (Boolean) -> Unit
+        ) {
             val updateData = hashMapOf(
                 "modifiedTime" to time,
                 "deleted" to !isDeleted
@@ -229,13 +238,50 @@ class FireBaseDatabase {
                 db.collection("users").document(AuthenticationService.checkUser().toString())
                     .collection("notes").document(noteid).get()
                     .addOnSuccessListener {
-                        if(it.exists())
+                        if (it.exists())
                             cont.resumeWith(Result.success(it))
 
                     }
-                    .addOnFailureListener{
+                    .addOnFailureListener {
                         cont.resumeWith(Result.failure(it))
                     }
+            }
+        }
+
+        suspend fun addLabeltoFirestore(label: LabelEntity) : Boolean {
+            return suspendCoroutine { cont ->
+                val labelmap = hashMapOf(
+                    "labelname" to label.labelname
+                )
+                val db = FirebaseFirestore.getInstance()
+                db.collection("users").document(AuthenticationService.checkUser().toString())
+                    .collection("labels").document(label.labelname).set(labelmap)
+                    .addOnSuccessListener {
+                        cont.resumeWith(Result.success(true))
+                    }
+                    .addOnFailureListener {
+                        cont.resumeWith(Result.failure(it))
+                    }
+            }
+        }
+
+        suspend fun getLabelsfromFirestore() :MutableList<String?> {
+            return suspendCoroutine { cont ->
+                val db = FirebaseFirestore.getInstance()
+                var list = mutableListOf<String?>()
+                db.collection("users").document(AuthenticationService.checkUser().toString())
+                    .collection("labels")
+                    .get().addOnSuccessListener {
+                        for(doc in it){
+                            val labelname = doc.get("labelname")
+                            list.add(labelname.toString())
+                        }
+                        cont.resumeWith(Result.success(list))
+                    }
+                    .addOnFailureListener {
+                        cont.resumeWith(Result.failure(it))
+                    }
+
             }
         }
 

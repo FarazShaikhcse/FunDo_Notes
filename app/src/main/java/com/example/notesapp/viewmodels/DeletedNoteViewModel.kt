@@ -38,7 +38,7 @@ class DeletedNoteViewModel : ViewModel() {
 
     fun restoreDeletedNotes(note: NoteEntity, context: Context) {
         val time = LocalDateTime.now().toString()
-        if(Util.checkInternet(context)) {
+        if (Util.checkInternet(context)) {
             FireBaseDatabase.restoreNotesFromDatabase(time, false) {
 
             }
@@ -51,15 +51,14 @@ class DeletedNoteViewModel : ViewModel() {
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     fun permDeleteNotes(note: NoteEntity, context: Context) {
-        if(Util.checkInternet(context)) {
+        if (Util.checkInternet(context)) {
             FireBaseDatabase.permDeleteNotesFromDatabase(true) {
             }
             _permNotesDeleteStatus.value = MainActivity.roomDBClass.noteDao.permDeleteNote(
                 note.noteid,
                 SharedPref.get("fuid").toString()
             ) > 0
-        }
-        else
+        } else
             _permNotesDeleteStatus.value = false
 
     }

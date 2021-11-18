@@ -84,7 +84,10 @@ class LoginFragment : Fragment(), View.OnClickListener {
                 val request = GraphRequest.newMeRequest(
                     result?.accessToken,
                     object : GraphRequest.GraphJSONObjectCallback {
-                        override fun onCompleted(jsonObject: JSONObject?, response: GraphResponse?) {
+                        override fun onCompleted(
+                            jsonObject: JSONObject?,
+                            response: GraphResponse?
+                        ) {
                             Log.v("Main", response.toString())
                             addFbDataToDB(jsonObject)
                         }
@@ -93,7 +96,7 @@ class LoginFragment : Fragment(), View.OnClickListener {
                 parameters.putString("fields", "id,name,email,gender, birthday")
                 request.parameters = parameters
                 request.executeAsync()
-                SharedPref.addString("fuid",AuthenticationService.checkUser().toString())
+                SharedPref.addString("fuid", AuthenticationService.checkUser().toString())
             }
 
             override fun onCancel() {
@@ -113,7 +116,7 @@ class LoginFragment : Fragment(), View.OnClickListener {
                     it.message,
                     Toast.LENGTH_LONG
                 ).show()
-                SharedPref.addString("fuid",AuthenticationService.checkUser().toString())
+                SharedPref.addString("fuid", AuthenticationService.checkUser().toString())
                 sharedViewModel.setGotoHomePageStatus(true)
             } else {
                 Toast.makeText(
