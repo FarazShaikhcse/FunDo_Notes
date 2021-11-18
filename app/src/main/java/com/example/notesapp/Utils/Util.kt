@@ -115,7 +115,7 @@ object Util {
         var userIcon: ShapeableImageView = activity.findViewById(R.id.userProfile)
         var layout: ImageView = activity.findViewById(R.id.notesLayout)
         var searchview: SearchView = activity.findViewById(R.id.searchView)
-        var deleteLabel: TextView = activity.findViewById(R.id.deleteLabel)
+        var deleteLabel: TextView = activity.findViewById(R.id.deleteLabelTV)
         var fundoLabel: TextView = activity.findViewById(R.id.FunDo)
 
         if (fragment.equals("homefragment")) {

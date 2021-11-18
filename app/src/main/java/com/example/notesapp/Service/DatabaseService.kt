@@ -179,4 +179,26 @@ class DatabaseService {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    suspend fun deleteLabelFromDB(label: String, context: Context): Boolean? {
+        return withContext(Dispatchers.IO) {
+            var status = false
+            if (Util.checkInternet(context)) {
+                status = FireBaseDatabase.deleteLabelFromFirebaseDB(label)
+            }
+            status
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    suspend fun editLabelinDB(label: String, newLabel:String, context: Context): Boolean? {
+        return withContext(Dispatchers.IO) {
+            var status = false
+            if (Util.checkInternet(context)) {
+                status = FireBaseDatabase.editLabelinFirebaseDB(label, newLabel)
+            }
+            status
+        }
+    }
+
 }

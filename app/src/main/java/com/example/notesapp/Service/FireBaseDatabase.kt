@@ -248,14 +248,14 @@ class FireBaseDatabase {
             }
         }
 
-        suspend fun addLabeltoFirestore(label: LabelEntity) : Boolean {
+        suspend fun addLabeltoFirestore(label: LabelEntity): Boolean {
             return suspendCoroutine { cont ->
                 val labelmap = hashMapOf(
                     "labelname" to label.labelname
                 )
                 val db = FirebaseFirestore.getInstance()
                 db.collection("users").document(AuthenticationService.checkUser().toString())
-                    .collection("labels").document(label.labelname).set(labelmap)
+                    .collection("labels").document().set(labelmap)
                     .addOnSuccessListener {
                         cont.resumeWith(Result.success(true))
                     }
@@ -265,14 +265,14 @@ class FireBaseDatabase {
             }
         }
 
-        suspend fun getLabelsfromFirestore() :MutableList<String?> {
+        suspend fun getLabelsfromFirestore(): MutableList<String?> {
             return suspendCoroutine { cont ->
                 val db = FirebaseFirestore.getInstance()
                 var list = mutableListOf<String?>()
                 db.collection("users").document(AuthenticationService.checkUser().toString())
                     .collection("labels")
                     .get().addOnSuccessListener {
-                        for(doc in it){
+                        for (doc in it) {
                             val labelname = doc.get("labelname")
                             list.add(labelname.toString())
                         }
@@ -282,6 +282,49 @@ class FireBaseDatabase {
                         cont.resumeWith(Result.failure(it))
                     }
 
+            }
+        }
+
+        suspend fun deleteLabelFromFirebaseDB(label: String): Boolean {
+            return suspendCoroutine { cont ->
+                val db = FirebaseFirestore.getInstance()
+                db.collection("users").document(AuthenticationService.checkUser().toString())
+                    .collection("labels").whereEqualTo("labelname", label).get()
+                    .addOnSuccessListener {
+                        it.documents[0].reference.delete()
+                            .addOnSuccessListener {
+                                cont.resumeWith(Result.success(true))
+                            }
+                            .addOnFailureListener {
+                                cont.resumeWith(Result.failure(it))
+                            }
+
+                    }
+                    .addOnFailureListener {
+                        cont.resumeWith(Result.failure(it))
+                    }
+            }
+
+        }
+
+        suspend fun editLabelinFirebaseDB(label: String, newLabel: String): Boolean {
+            return suspendCoroutine { cont ->
+                val db = FirebaseFirestore.getInstance()
+                db.collection("users").document(AuthenticationService.checkUser().toString())
+                    .collection("labels").whereEqualTo("labelname", label).get()
+                    .addOnSuccessListener {
+                        it.documents[0].reference.update("labelname", newLabel)
+                            .addOnSuccessListener {
+                                cont.resumeWith(Result.success(true))
+                            }
+                            .addOnFailureListener {
+                                cont.resumeWith(Result.failure(it))
+                            }
+
+                    }
+                    .addOnFailureListener {
+                        cont.resumeWith(Result.failure(it))
+                    }
             }
         }
 

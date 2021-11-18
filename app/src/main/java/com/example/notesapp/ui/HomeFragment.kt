@@ -282,7 +282,8 @@ class HomeFragment : Fragment(), SearchView.OnCloseListener {
             val menu: Menu = navigationView.getMenu()
             for (i in it) {
                 if((SharedPref.get(i!!).toString() == "") or (SharedPref.get("start").toString() == "true"))  {
-                    menu.add(i)
+                    val labelmenu = menu.add(i)
+                    labelmenu.setIcon(resources.getDrawable(R.drawable.ic_baseline_label_important_24))
                     SharedPref.addString(i.toString(), "updated")
                 }
             }

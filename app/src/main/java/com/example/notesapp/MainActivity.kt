@@ -67,8 +67,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
         roomDBClass = Room.databaseBuilder(applicationContext, RoomDatabase::class.java, "myDB")
             .fallbackToDestructiveMigration().allowMainThreadQueries().build()
-
-
+        SharedPref.addString("start","true")
     }
 
     private fun observeNavigation() {
@@ -234,9 +233,9 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     override fun onDestroy() {
         super.onDestroy()
-        SharedPref.addString("start","true")
+
     }
-    
+
 }
 
 

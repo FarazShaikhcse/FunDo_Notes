@@ -94,7 +94,7 @@ class AddNoteFragment : Fragment() {
         userIcon = requireActivity().findViewById(R.id.userProfile)
         searchview = requireActivity().findViewById(R.id.searchView)
         layout = requireActivity().findViewById(R.id.notesLayout)
-        requireActivity().findViewById<TextView>(R.id.deleteLabel).isVisible = false
+        requireActivity().findViewById<TextView>(R.id.deleteLabelTV).isVisible = false
         userIcon.isVisible = false
         layout.isVisible = false
         searchview.isVisible = false

@@ -1,9 +1,9 @@
 package com.example.notesapp.ui
 
+import android.app.Dialog
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
-import android.view.Menu
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
@@ -18,20 +18,24 @@ import com.example.notesapp.viewmodels.AddLabelViewModelFactory
 import com.example.notesapp.viewmodels.SharedViewModel
 import com.example.notesapp.viewmodels.SharedViewModelFactory
 import com.google.android.material.imageview.ShapeableImageView
-import com.google.android.material.navigation.NavigationView
 import kotlinx.android.synthetic.main.fragment_add_label.*
+
+import androidx.appcompat.content.res.AppCompatResources
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.example.notesapp.utils.LabelAdapter
 
 
 class AddLabelFragment : Fragment() {
 
     private lateinit var addLabelViewModel: AddLabelViewModel
-    lateinit var toolbar: Toolbar
-    lateinit var userIcon: ShapeableImageView
-    lateinit var deleteBtn: ImageView
-    lateinit var layout: ImageView
-    lateinit var searchview: SearchView
-    lateinit var arrayAdapter: ArrayAdapter<*>
+    private lateinit var toolbar: Toolbar
+    private lateinit var userIcon: ShapeableImageView
+    private lateinit var layout: ImageView
+    private lateinit var searchview: SearchView
+    private lateinit var adapter: LabelAdapter
     private lateinit var sharedViewModel: SharedViewModel
+    private lateinit var labels: MutableList<String?>
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -39,38 +43,66 @@ class AddLabelFragment : Fragment() {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_add_label, container, false)
 
-        var labels : MutableList<String?>
+
         sharedViewModel = ViewModelProvider(
             requireActivity(),
             SharedViewModelFactory()
         )[SharedViewModel::class.java]
         addLabelViewModel =
-            ViewModelProvider(requireActivity(), AddLabelViewModelFactory())[AddLabelViewModel::class.java]
+            ViewModelProvider(
+                requireActivity(),
+                AddLabelViewModelFactory()
+            )[AddLabelViewModel::class.java]
         addLabelViewModel.getLabelsFromDatabase(requireContext())
+        // createDialog()
         view.findViewById<ImageView>(R.id.saveLabelBtn).setOnClickListener {
             val labelEditText = view.findViewById<EditText>(R.id.labelName)
-            if(labelEditText.text.toString() != ""){
-                addLabelViewModel.addLabelToDatabase(LabelEntity(labelname = labelEditText.text.toString()),
-                    requireContext())
+            if (labelEditText.text.toString() != "") {
+                addLabelViewModel.addLabelToDatabase(
+                    LabelEntity(labelname = labelEditText.text.toString()),
+                    requireContext()
+                )
             }
         }
-        var mListView = view.findViewById<ListView>(R.id.userlist)
-        addLabelViewModel.getLabelStatus.observe(viewLifecycleOwner){
+        var mListView = view.findViewById<RecyclerView>(R.id.labelList)
+
+        addLabelViewModel.getLabelStatus.observe(viewLifecycleOwner) {
             labels = it
-            arrayAdapter = ArrayAdapter(requireContext(),
-                android.R.layout.simple_list_item_1, labels)
-            mListView.adapter = arrayAdapter
+            adapter = LabelAdapter(labels, addLabelViewModel, requireContext())
+
+            mListView.layoutManager = LinearLayoutManager(requireContext())
+            mListView.adapter = adapter
         }
-        addLabelViewModel.labelAddedToDbStatus.observe(viewLifecycleOwner){
-            if(it){
+
+        addLabelViewModel.labelAddedToDbStatus.observe(viewLifecycleOwner) {
+            if (it) {
                 view.findViewById<EditText>(R.id.labelName).setText("")
                 addLabelViewModel.getLabelsFromDatabase(requireContext())
-                arrayAdapter.notifyDataSetChanged()
+                adapter.notifyDataSetChanged()
             }
         }
+
+        addLabelViewModel.labelDeletedFromDbStatus.observe(viewLifecycleOwner) {
+            if (it) {
+                addLabelViewModel.getLabelsFromDatabase(requireContext())
+                adapter.notifyDataSetChanged()
+
+            }
+        }
+        addLabelViewModel.labelEditedinDbStatus.observe(viewLifecycleOwner) {
+            if (it) {
+                addLabelViewModel.getLabelsFromDatabase(requireContext())
+                adapter.notifyDataSetChanged()
+
+            }
+        }
+
+
         loadToolBar()
         return view
     }
+
+
     private fun loadToolBar() {
         toolbar = requireActivity().findViewById(R.id.myToolbar)
         toolbar.setNavigationIcon(R.drawable.ic_baseline_arrow_back_24)
@@ -80,7 +112,7 @@ class AddLabelFragment : Fragment() {
         userIcon = requireActivity().findViewById(R.id.userProfile)
         searchview = requireActivity().findViewById(R.id.searchView)
         layout = requireActivity().findViewById(R.id.notesLayout)
-        requireActivity().findViewById<TextView>(R.id.deleteLabel).isVisible = false
+        requireActivity().findViewById<TextView>(R.id.deleteLabelTV).isVisible = false
         userIcon.isVisible = false
         layout.isVisible = false
         searchview.isVisible = false

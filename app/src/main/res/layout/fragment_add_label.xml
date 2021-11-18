@@ -32,20 +32,20 @@
 
         <ImageView
             android:id="@+id/saveLabelBtn"
-            android:layout_width="85dp"
+            android:layout_width="45dp"
             android:layout_height="36dp"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="10dp"
             android:layout_weight="1"
             android:src="@drawable/ic_baseline_add_24" />
     </LinearLayout>
 
-    <ListView
-        android:id="@+id/userlist"
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/labelList"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="220dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"></ListView>
+        app:layout_constraintTop_toTopOf="parent"></androidx.recyclerview.widget.RecyclerView>
 </androidx.constraintlayout.widget.ConstraintLayout>
