@@ -40,6 +40,9 @@ class SharedViewModel : ViewModel() {
     private val _gotoAddLabelPageStatus = MutableLiveData<Boolean>()
     val gotoAddLabelPageStatus = _gotoAddLabelPageStatus as LiveData<Boolean>
 
+    private val _gotoArchivedPageStatus = MutableLiveData<Boolean>()
+    val gotoArchivedPageStatus = _gotoArchivedPageStatus as LiveData<Boolean>
+
 
     fun setGotoHomePageStatus(status: Boolean) {
         Log.d("loginStatus", "Home page involked")
@@ -92,6 +95,10 @@ class SharedViewModel : ViewModel() {
 
     fun getCurrentUid(): String {
         return AuthenticationService?.getCurrentUser()!!.uid.toString()
+    }
+
+    fun setGoToArchivedNotesPageStatus(status: Boolean) {
+        _gotoArchivedPageStatus.value = status
     }
 
 }

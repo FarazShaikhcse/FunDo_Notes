@@ -11,5 +11,7 @@ data class NoteEntity(
     @ColumnInfo(name = "title") var title: String,
     @ColumnInfo(name = "content") var content: String,
     @ColumnInfo(name = "modifiedtime") var modifiedTime: String,
-    @ColumnInfo(name = "deleted") var deleted: Boolean
+    @ColumnInfo(name = "deleted") var deleted: Boolean = false,
+    @ColumnInfo(name = "archived") var archived: Boolean = false,
+    @ColumnInfo(name = "reminder") var reminder: Long = 0L
 )

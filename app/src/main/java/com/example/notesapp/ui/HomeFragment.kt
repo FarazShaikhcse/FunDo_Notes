@@ -32,8 +32,6 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.imageview.ShapeableImageView
 import com.google.android.material.navigation.NavigationView
 import com.squareup.picasso.Picasso
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 
 
 class HomeFragment : Fragment(), SearchView.OnCloseListener {
@@ -71,8 +69,7 @@ class HomeFragment : Fragment(), SearchView.OnCloseListener {
         // Inflate the layout for this fragment
         val view = inflater.inflate(R.layout.fragment_home, container, false)
         (requireActivity() as AppCompatActivity).supportActionBar?.show()
-        requireActivity().findViewById<NavigationView>(R.id.myNavMenu).getMenu().getItem(0)
-            .setChecked(true);
+        setHomeMenu(true)
         var profilePhoto: Uri? = null
         mainHandler = Handler(Looper.getMainLooper())
         sharedViewModel = ViewModelProvider(
@@ -144,6 +141,11 @@ class HomeFragment : Fragment(), SearchView.OnCloseListener {
         return view
     }
 
+    private fun setHomeMenu(b: Boolean) {
+        requireActivity().findViewById<NavigationView>(R.id.myNavMenu).getMenu().getItem(0)
+            .setChecked(b);
+    }
+
 
     private fun searchNotes() {
         searchview.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
@@ -173,7 +175,7 @@ class HomeFragment : Fragment(), SearchView.OnCloseListener {
     }
 
     private fun getUserNotes() {
-        homeViewModel.readNotesFromDatabase(false, requireContext())
+        homeViewModel.readNotesFromDatabase(false, "", requireContext())
     }
 
 
@@ -284,12 +286,24 @@ class HomeFragment : Fragment(), SearchView.OnCloseListener {
                 if((SharedPref.get(i!!).toString() == "") or (SharedPref.get("start").toString() == "true"))  {
                     val labelmenu = menu.add(i)
                     labelmenu.setIcon(resources.getDrawable(R.drawable.ic_baseline_label_important_24))
+                    labelmenu.setOnMenuItemClickListener {
+                        SharedPref.addString("clickedLabel", i)
+//                        setHomeMenu(false)
+//                        labelmenu.isChecked = true
+                        Log.d("menuclicked","clicked"+i)
+                        loadLabelNotes(i)
+                        return@setOnMenuItemClickListener false
+                    }
                     SharedPref.addString(i.toString(), "updated")
                 }
             }
             SharedPref.addString("start","false")
         }
 
+    }
+
+    private fun loadLabelNotes(i: String) {
+        homeViewModel.readNotesFromDatabase(false, i, requireContext())
     }
 
     private fun loadNotesInLayoutType() {

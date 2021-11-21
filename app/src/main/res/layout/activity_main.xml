@@ -25,10 +25,10 @@
             android:layout_alignParentBottom="true"
             android:layout_marginStart="0dp"
             android:layout_marginLeft="0dp"
-            android:layout_marginTop="0dp"
+            android:layout_marginTop="-1dp"
             android:layout_marginEnd="0dp"
             android:layout_marginRight="0dp"
-            android:layout_marginBottom="0dp"
+            android:layout_marginBottom="1dp"
             app:layout_constraintTop_toTopOf="parent" />
 
         <androidx.appcompat.widget.Toolbar
@@ -50,6 +50,17 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">
 
+
+                <ImageView
+                    android:id="@+id/archiveButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginRight="16dp"
+                    android:visibility="gone"
+                    app:layout_constraintEnd_toStartOf="@id/deleteButton"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:srcCompat="@drawable/ic_baseline_archive_24" />
 
                 <ImageView
                     android:id="@+id/deleteButton"
@@ -97,8 +108,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:foregroundTint="@color/white"
-                        app:queryHint="Search notes" >
-
+                        app:queryHint="Search notes">
 
 
                     </androidx.appcompat.widget.SearchView>
@@ -114,7 +124,7 @@
                     android:layout_marginTop="15dp"
                     android:fontFamily="sans-serif-medium"
                     android:labelFor="@id/searchView"
-                    android:text="FunDo Notes"
+                    android:text="FunDoo"
                     android:textColor="@color/white"
                     android:textSize="20sp"
                     app:layout_constraintStart_toStartOf="@id/searchViewlayout"
@@ -128,6 +138,7 @@
                     android:text="Deleted"
                     android:textColor="@color/white"
                     android:textSize="22sp"
+                    android:visibility="gone"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />
             </androidx.constraintlayout.widget.ConstraintLayout>

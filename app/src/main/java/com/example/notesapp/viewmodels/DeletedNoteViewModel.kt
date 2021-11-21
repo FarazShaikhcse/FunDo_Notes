@@ -31,7 +31,7 @@ class DeletedNoteViewModel : ViewModel() {
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     fun readNotesFromDatabase(isDeleted: Boolean, context: Context) {
         viewModelScope.launch {
-            val noteList = DatabaseService().readNotes(true, context)
+            val noteList = DatabaseService().readNotes(true, false, context)
             _readNotesFromDatabaseStatus.value = noteList
         }
     }
@@ -39,13 +39,13 @@ class DeletedNoteViewModel : ViewModel() {
     fun restoreDeletedNotes(note: NoteEntity, context: Context) {
         val time = LocalDateTime.now().toString()
         if (Util.checkInternet(context)) {
-            FireBaseDatabase.restoreNotesFromDatabase(time, false) {
+            FireBaseDatabase.restoreNotesFromDatabase(time, true) {
 
             }
         }
         _restoreNotesStatus.value = MainActivity.roomDBClass.noteDao.tempDeleteNote(
             SharedPref.get("fuid").toString(),
-            SharedPref.get("noteid").toString(), false, time
+            SharedPref.get("noteid").toString(), false, false, time
         ) > 0
     }
 

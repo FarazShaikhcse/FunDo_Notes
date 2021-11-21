@@ -32,6 +32,10 @@
             android:id="@+id/menuDeleted"
             android:icon="@drawable/ic_baseline_delete_24"
             android:title="Deleted" />
+        <item
+            android:id="@+id/menuArchived"
+            android:icon="@drawable/ic_baseline_archive_24_black"
+            android:title="Archived" />
     </group>
 
 </menu>

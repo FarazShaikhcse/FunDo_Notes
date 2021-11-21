@@ -55,11 +55,18 @@ class HomeViewModel: ViewModel(){
     }
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-    fun readNotesFromDatabase(isDeleted: Boolean, context: Context){
+    fun readNotesFromDatabase(isDeleted: Boolean, label:String, context: Context){
         viewModelScope.launch {
-            val noteList = DatabaseService().readNotes(false, context)
-            Log.d("listsize",noteList.size.toString())
-            _readNotesFromDatabaseStatus.value = noteList
+            if(label == "") {
+                val noteList = DatabaseService().readNotes(false, false, context)
+                Log.d("listsize", noteList.size.toString())
+                _readNotesFromDatabaseStatus.value = noteList
+            }
+            else{
+                val noteList = DatabaseService().readNotes(false, label, context)
+                Log.d("listsize", noteList.size.toString())
+                _readNotesFromDatabaseStatus.value = noteList
+            }
         }
     }
 

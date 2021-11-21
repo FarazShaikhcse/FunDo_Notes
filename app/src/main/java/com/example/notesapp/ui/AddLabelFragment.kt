@@ -42,8 +42,6 @@ class AddLabelFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.fragment_add_label, container, false)
-
-
         sharedViewModel = ViewModelProvider(
             requireActivity(),
             SharedViewModelFactory()
@@ -54,7 +52,6 @@ class AddLabelFragment : Fragment() {
                 AddLabelViewModelFactory()
             )[AddLabelViewModel::class.java]
         addLabelViewModel.getLabelsFromDatabase(requireContext())
-        // createDialog()
         view.findViewById<ImageView>(R.id.saveLabelBtn).setOnClickListener {
             val labelEditText = view.findViewById<EditText>(R.id.labelName)
             if (labelEditText.text.toString() != "") {
@@ -96,8 +93,6 @@ class AddLabelFragment : Fragment() {
 
             }
         }
-
-
         loadToolBar()
         return view
     }

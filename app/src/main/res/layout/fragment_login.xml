@@ -78,7 +78,7 @@
         android:layout_width="141dp"
         android:layout_height="35dp"
         android:gravity="center"
-        android:text="Don't have account ?"
+        android:text="Don't have an account ?"
         android:textColor="@color/black"
         android:textSize="15sp"
         app:layout_constraintBottom_toBottomOf="parent"

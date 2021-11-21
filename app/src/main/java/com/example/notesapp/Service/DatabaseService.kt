@@ -25,11 +25,11 @@ class DatabaseService {
     }
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-    suspend fun readNotes(isDeleted: Boolean, context: Context): MutableList<NoteEntity> {
+    suspend fun readNotes(isDeleted: Boolean, isArchived: Boolean, context: Context): MutableList<NoteEntity> {
         return withContext(Dispatchers.IO) {
             val roomNoteList = MainActivity.roomDBClass.noteDao.readNotes(
                 SharedPref.get("fuid").toString(),
-                isDeleted
+                isDeleted, isArchived
             )
 
             roomNoteList
@@ -59,7 +59,9 @@ class DatabaseService {
                             firebaseNoteList[index].content,
                             firebaseNoteList[index].noteid,
                             firebaseNoteList[index].modifiedTime,
-                            firebaseNoteList[index].deleted as Boolean
+                            firebaseNoteList[index].deleted as Boolean,
+                            firebaseNoteList[index].archived as Boolean
+
                         )
 
                     } else if (firebaseNoteList[index].modifiedTime.compareTo(note.modifiedTime) < 0) {
@@ -96,17 +98,18 @@ class DatabaseService {
                             "modifiedTime" to noteList[index].modifiedTime,
                             "note" to noteList[index].content,
                             "title" to noteList[index].title,
-                            "deleted" to noteList[index].deleted as Boolean
+                            "deleted" to noteList[index].deleted as Boolean,
+                            "archived" to noteList[index].archived as Boolean
                         )
                         FireBaseDatabase.checkNote(note.noteid).reference.update(updateData as Map<String, Any>)
                     } else if (noteList[index].modifiedTime.compareTo(note.modifiedTime) < 0) {
                         MainActivity.roomDBClass.noteDao.updateNotes(
                             note.title,
                             note.content, note.noteid,
-                            note.modifiedTime, note.deleted
+                            note.modifiedTime, note.deleted, note.archived
                         )
                     }
-                } else {
+                } else if (note.noteid !in roomnoteid) {
                     MainActivity.roomDBClass.noteDao.insertNote(
                         NoteEntity(
                             note.noteid,
@@ -114,9 +117,11 @@ class DatabaseService {
                             note.title,
                             note.content,
                             note.modifiedTime,
-                            note.deleted
+                            note.deleted,
+                            note.archived
                         )
                     )
+                    roomnoteid.add(note.noteid)
                 }
             }
         }
@@ -129,23 +134,15 @@ class DatabaseService {
                 var firebaseNoteList = mutableListOf<NoteEntity>()
                 if (Util.checkInternet(context)) {
                     Log.d("internet", "entered")
-                    firebaseNoteList.addAll(FireBaseDatabase.readNotes(false))
-                    firebaseNoteList.addAll(FireBaseDatabase.readNotes(true))
+                    firebaseNoteList.addAll(FireBaseDatabase.readAllNotes())
                 }
                 val roomNoteList = mutableListOf<NoteEntity>()
                 roomNoteList.addAll(
-                    MainActivity.roomDBClass.noteDao.readNotes(
-                        SharedPref.get("fuid").toString(),
-                        false
+                    MainActivity.roomDBClass.noteDao.readAllNotes(
+                        SharedPref.get("fuid").toString()
                     )
                 )
 
-                roomNoteList.addAll(
-                    MainActivity.roomDBClass.noteDao.readNotes(
-                        SharedPref.get("fuid").toString(),
-                        true
-                    )
-                )
 
                 Log.d("firebaselistsize", firebaseNoteList.size.toString())
                 Log.d("roomlistsize", roomNoteList.size.toString())
@@ -198,6 +195,14 @@ class DatabaseService {
                 status = FireBaseDatabase.editLabelinFirebaseDB(label, newLabel)
             }
             status
+        }
+    }
+
+    suspend fun readNotes(isDeleted: Boolean, label: String, context1: Context): MutableList<NoteEntity> {
+        return withContext(Dispatchers.IO) {
+            val roomNoteList = FireBaseDatabase.getNotesWithLabel(label)
+
+            roomNoteList
         }
     }
 

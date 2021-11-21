@@ -48,17 +48,33 @@ class AddNoteViewModel : ViewModel() {
     }
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-    fun deleteNotesFromDatabase(titleText: String, noteText: String, context: Context) {
+    fun deleteNotesFromDatabase(context: Context) {
         val time = LocalDateTime.now().toString()
         if (Util.checkInternet(context)) {
             FireBaseDatabase.tempDeleteNotesFromDatabase(false, time) {
             }
         }
+        _databaseNoteDeletedStatus.value = MainActivity.roomDBClass.noteDao.tempDeleteNote(
+            SharedPref.get("fuid").toString(),
+            SharedPref.get("noteid").toString(), true, false, time
+        ) > 0
+
+    }
+
+    fun linkNotesandLabels(noteid: String, labelsList: MutableList<String>, context: Context) {
+        FireBaseDatabase.linkNotesandLabels(noteid, labelsList)
+    }
+
+    fun archiveNotes(titleText: String, noteText: String, isArchived: Boolean, context: Context) {
+        val time = LocalDateTime.now().toString()
+        if (Util.checkInternet(context)) {
+            FireBaseDatabase.archiveNotesInDatabase(isArchived, time)
+        }
 
         if (titleText.isNotEmpty() && noteText.isNotEmpty()) {
-            _databaseNoteDeletedStatus.value = MainActivity.roomDBClass.noteDao.tempDeleteNote(
+            _databaseNoteDeletedStatus.value = MainActivity.roomDBClass.noteDao.archiveNotes(
                 SharedPref.get("fuid").toString(),
-                SharedPref.get("noteid").toString(), true, time
+                SharedPref.get("noteid").toString(), isArchived, time
             ) > 0
 
         }

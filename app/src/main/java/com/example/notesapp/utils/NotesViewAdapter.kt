@@ -48,10 +48,16 @@ class NotesViewAdapter(
     override fun onBindViewHolder(holder: TodoViewHolder, position: Int) {
         val title = holder.itemView.findViewById<TextView>(R.id.gridTitle)
         val note = holder.itemView.findViewById<TextView>(R.id.gridNote)
+        val reminder = holder.itemView.findViewById<TextView>(R.id.reminderGrid)
 
         holder.itemView.apply {
             title.text = filteredNotes[position].title
             note.text = filteredNotes[position].content
+            if(filteredNotes[position].reminder != 0L)
+                reminder.text = Util.getDate(filteredNotes[position].reminder)
+            else
+                reminder.visibility = View.INVISIBLE
+
         }
 
     }

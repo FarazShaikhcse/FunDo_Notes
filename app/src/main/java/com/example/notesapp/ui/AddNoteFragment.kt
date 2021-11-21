@@ -1,5 +1,7 @@
 package com.example.notesapp.ui
 
+import android.app.DatePickerDialog
+import android.app.TimePickerDialog
 import android.os.Build
 import android.os.Bundle
 import androidx.fragment.app.Fragment
@@ -12,31 +14,51 @@ import androidx.appcompat.widget.SearchView
 import androidx.appcompat.widget.Toolbar
 import androidx.core.view.isVisible
 import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.example.notesapp.R
 import com.example.notesapp.utils.Note
 import com.example.notesapp.service.roomdb.NoteEntity
+import com.example.notesapp.utils.LabelCBAdapter
 import com.example.notesapp.utils.SharedPref
-import com.example.notesapp.viewmodels.AddNoteViewModel
-import com.example.notesapp.viewmodels.AddNoteViewModelFactory
-import com.example.notesapp.viewmodels.SharedViewModel
-import com.example.notesapp.viewmodels.SharedViewModelFactory
+import com.example.notesapp.viewmodels.*
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.imageview.ShapeableImageView
+import java.text.SimpleDateFormat
 import java.time.LocalDateTime
+import java.util.*
 
 
-class AddNoteFragment : Fragment() {
+
+class AddNoteFragment : Fragment(), DatePickerDialog.OnDateSetListener,
+    TimePickerDialog.OnTimeSetListener  {
 
     private lateinit var sharedViewModel: SharedViewModel
-    lateinit var addNoteViewModel: AddNoteViewModel
-    lateinit var toolbar: Toolbar
-    lateinit var userIcon: ShapeableImageView
-    lateinit var deleteBtn: ImageView
-    lateinit var layout: ImageView
-    lateinit var searchview: SearchView
-    lateinit var notesTitle: EditText
-    lateinit var notesContent: EditText
-    lateinit var saveBtn: FloatingActionButton
+    private lateinit var addNoteViewModel: AddNoteViewModel
+    private lateinit var addLabelViewModel: AddLabelViewModel
+    private lateinit var toolbar: Toolbar
+    private lateinit var userIcon: ShapeableImageView
+    private lateinit var deleteBtn: ImageView
+    private lateinit var archivebtn: ImageView
+    private lateinit var layout: ImageView
+    private lateinit var searchview: SearchView
+    private lateinit var notesTitle: EditText
+    private lateinit var notesContent: EditText
+    private lateinit var saveBtn: FloatingActionButton
+    private lateinit var reminderBtn: FloatingActionButton
+    private lateinit var adapter: LabelCBAdapter
+
+    var day = 0
+    var year = 0
+    var month = 0
+    var hour = 0
+    var minute = 0
+
+    var savedDay = 0
+    var savedYear = 0
+    var savedMonth = 0
+    var savedHour = 0
+    var savedMinute = 0
 
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
@@ -53,34 +75,62 @@ class AddNoteFragment : Fragment() {
             this,
             AddNoteViewModelFactory()
         )[AddNoteViewModel::class.java]
+        addLabelViewModel =
+            ViewModelProvider(
+                requireActivity(),
+                AddLabelViewModelFactory()
+            )[AddLabelViewModel::class.java]
         loadToolBar()
         deleteBtn = requireActivity().findViewById(R.id.deleteButton)
         notesTitle = view.findViewById(R.id.notesTitle)
         notesContent = view.findViewById(R.id.notesContent)
         saveBtn = view.findViewById(R.id.saveButton)
+        reminderBtn = view.findViewById(R.id.reminderButton)
+        addLabelViewModel.getLabelsFromDatabase(requireContext())
+        clickListeners()
+        observe()
+        loadNotesValuesForUpdation()
+        displayLabels()
+        return view
+    }
+
+    private fun clickListeners() {
         saveBtn.setOnClickListener {
             saveNote()
         }
         deleteBtn.setOnClickListener {
             deleteNotes()
         }
-        observe()
-        loadNotesValuesForUpdation()
-        return view
+        archivebtn.setOnClickListener {
+            archiveNotes()
+        }
+        reminderBtn.setOnClickListener {
+            pickDate()
+        }
     }
 
-    private fun deleteNotes() {
+    private fun archiveNotes() {
         val titleText = notesTitle.text.toString()
         val noteText = notesContent.text.toString()
 
-        addNoteViewModel.deleteNotesFromDatabase(titleText, noteText, requireContext())
+        addNoteViewModel.archiveNotes(titleText, noteText, true, requireContext())
+    }
+
+    private fun displayLabels() {
+
+    }
+
+    private fun deleteNotes() {
+
+        addNoteViewModel.deleteNotesFromDatabase(requireContext())
     }
 
     private fun loadNotesValuesForUpdation() {
-        if (SharedPref.get("title").toString() != "") {
+        if ((SharedPref.get("title").toString() != "") or (SharedPref.get("note").toString() != "")) {
             notesTitle.setText(SharedPref.get("title").toString())
             notesContent.setText(SharedPref.get("note").toString())
             deleteBtn.isVisible = true
+            archivebtn.isVisible = true
         }
     }
 
@@ -95,6 +145,9 @@ class AddNoteFragment : Fragment() {
         searchview = requireActivity().findViewById(R.id.searchView)
         layout = requireActivity().findViewById(R.id.notesLayout)
         requireActivity().findViewById<TextView>(R.id.deleteLabelTV).isVisible = false
+        requireActivity().findViewById<TextView>(R.id.FunDo).text = "Add Notes"
+        archivebtn = requireActivity().findViewById(R.id.archiveButton)
+        archivebtn.isVisible = false
         userIcon.isVisible = false
         layout.isVisible = false
         searchview.isVisible = false
@@ -126,9 +179,11 @@ class AddNoteFragment : Fragment() {
             val time = LocalDateTime.now().toString()
             val note = NoteEntity(
                 time, SharedPref.get("fuid").toString(), titleText, noteText,
-                time, false
+                time
             )
+            val labelsList = adapter.getSelectedLabels()
             addNoteViewModel.addNotesToDatabase(note, requireContext())
+            addNoteViewModel.linkNotesandLabels(note.noteid, labelsList, requireContext())
         }
 
     }
@@ -167,11 +222,68 @@ class AddNoteFragment : Fragment() {
                 ).show()
             }
         }
+        addLabelViewModel.getLabelStatus.observe(viewLifecycleOwner) {
+            val labels = it
+            adapter = LabelCBAdapter(labels, addLabelViewModel, requireContext())
+            var mListView = view?.findViewById<RecyclerView>(R.id.labelRV)
+            mListView?.layoutManager = LinearLayoutManager(requireContext())
+            mListView?.adapter = adapter
+        }
     }
 
     override fun onStop() {
         super.onStop()
         clearSharedPref()
     }
+
+    private fun pickDate() {
+        getDateTimeCalender()
+        DatePickerDialog(requireContext(), this, year, month, day).show()
+    }
+
+    override fun onDateSet(p0: DatePicker?, year: Int, month: Int, day: Int) {
+        savedDay = day
+        savedMonth = month
+        savedYear = year
+        getDateTimeCalender()
+        TimePickerDialog(requireContext(), this, hour, minute, false).show()
+    }
+
+    override fun onTimeSet(p0: TimePicker?, hour: Int, minute: Int) {
+        savedHour = hour
+        savedMinute = minute
+
+        val cal = Calendar.getInstance()
+        cal.set(savedYear, savedMonth, savedDay, savedHour, savedMinute, 0)
+        val timeInMilli = cal.timeInMillis
+
+
+        if (timeInMilli > System.currentTimeMillis()) {
+            addReminder(timeInMilli)
+        }
+    }
+
+    private fun addReminder(timeInMilli: Long) {
+        val context = requireContext()
+        val titleText = notesTitle.text.toString()
+        val noteText = notesContent.text.toString()
+        val time = LocalDateTime.now().toString()
+
+        val note = NoteEntity(time, SharedPref.get("fuid").toString(), titleText, noteText, time,
+            reminder = timeInMilli)
+        if (titleText.isNotEmpty() && noteText.isNotEmpty()) {
+            addNoteViewModel.addNotesToDatabase(note, context)
+        }
+    }
+
+    private fun getDateTimeCalender() {
+        val calender = Calendar.getInstance()
+        year = calender.get(Calendar.YEAR)
+        month = calender.get(Calendar.MONTH)
+        day = calender.get(Calendar.DAY_OF_MONTH)
+        hour = calender.get(Calendar.HOUR)
+        minute = calender.get(Calendar.MINUTE)
+    }
+
 
 }

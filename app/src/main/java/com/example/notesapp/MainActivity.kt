@@ -116,6 +116,12 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     gotoAddLabelPage()
                 }
             })
+        sharedViewModel.gotoArchivedPageStatus.observe(this@MainActivity,
+            {
+                if (it) {
+                    gotoArchivedFragment()
+                }
+            })
 
     }
 
@@ -181,6 +187,14 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
     }
 
+    private fun gotoArchivedFragment() {
+
+        supportFragmentManager.beginTransaction().apply {
+            replace(R.id.flFragment, ArchivedFragment())
+            commit()
+        }
+    }
+
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
         drawerLayout.closeDrawer(GravityCompat.START)
         when (item.itemId) {
@@ -202,6 +216,9 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             }
             R.id.menuDeleted -> {
                 sharedViewModel.setGoToDeletedNotesPageStatus(true)
+            }
+            R.id.menuArchived -> {
+                sharedViewModel.setGoToArchivedNotesPageStatus(true)
             }
 
         }
@@ -231,10 +248,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         return super.onOptionsItemSelected(item)
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-
-    }
 
 }
 

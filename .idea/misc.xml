@@ -10,12 +10,15 @@
         <entry key="app/src/main/res/drawable/ic_baseline_add_circle_24.xml" value="0.11851851851851852" />
         <entry key="app/src/main/res/drawable/ic_baseline_arrow_back_24.xml" value="0.1" />
         <entry key="app/src/main/res/drawable/ic_baseline_dehaze_24.xml" value="0.1" />
+        <entry key="app/src/main/res/drawable/ic_baseline_delete_24.xml" value="0.1" />
         <entry key="app/src/main/res/drawable/ic_baseline_edit_24.xml" value="0.1" />
         <entry key="app/src/main/res/drawable/ic_baseline_grid_on_24.xml" value="0.1" />
+        <entry key="app/src/main/res/drawable/ic_baseline_label_important_24.xml" value="0.1638888888888889" />
         <entry key="app/src/main/res/drawable/ic_baseline_menu_24.xml" value="0.1140625" />
         <entry key="app/src/main/res/drawable/ic_baseline_search_24.xml" value="0.1" />
         <entry key="app/src/main/res/drawable/ic_email.xml" value="0.13385416666666666" />
         <entry key="app/src/main/res/drawable/ic_password.xml" value="0.13385416666666666" />
+        <entry key="app/src/main/res/drawable/roundbtn.xml" value="0.1638888888888889" />
         <entry key="app/src/main/res/drawable/toolbarbg.xml" value="0.1" />
         <entry key="app/src/main/res/layout/Custom_dialog.xml" value="0.25" />
         <entry key="app/src/main/res/layout/activity_dashboard.xml" value="0.121875" />
@@ -23,18 +26,23 @@
         <entry key="app/src/main/res/layout/app_bar_main.xml" value="0.21875" />
         <entry key="app/src/main/res/layout/custom_dialog.xml" value="0.25" />
         <entry key="app/src/main/res/layout/custom_dialog2.xml" value="0.21875" />
+        <entry key="app/src/main/res/layout/fragment_add_label.xml" value="0.25" />
         <entry key="app/src/main/res/layout/fragment_add_note.xml" value="0.125" />
+        <entry key="app/src/main/res/layout/fragment_archived.xml" value="0.20108695652173914" />
         <entry key="app/src/main/res/layout/fragment_deleted_notes.xml" value="0.109375" />
         <entry key="app/src/main/res/layout/fragment_fb_login.xml" value="0.12135416666666667" />
         <entry key="app/src/main/res/layout/fragment_home.xml" value="0.1" />
         <entry key="app/src/main/res/layout/fragment_home2.xml" value="0.21875" />
-        <entry key="app/src/main/res/layout/fragment_login.xml" value="0.335" />
-        <entry key="app/src/main/res/layout/fragment_registration.xml" value="0.11875" />
+        <entry key="app/src/main/res/layout/fragment_login.xml" value="0.1" />
+        <entry key="app/src/main/res/layout/fragment_registration.xml" value="0.1" />
         <entry key="app/src/main/res/layout/fragment_reset_pass.xml" value="0.12135416666666667" />
         <entry key="app/src/main/res/layout/fragment_reset_password.xml" value="0.1" />
         <entry key="app/src/main/res/layout/fragment_splash.xml" value="0.335" />
         <entry key="app/src/main/res/layout/gird_layout.xml" value="0.1381340579710145" />
-        <entry key="app/src/main/res/layout/grid_layout.xml" value="0.45" />
+        <entry key="app/src/main/res/layout/grid_layout.xml" value="0.30158730158730157" />
+        <entry key="app/src/main/res/layout/label_checkbox_layout.xml" value="0.20108695652173914" />
+        <entry key="app/src/main/res/layout/label_dialog.xml" value="0.1" />
+        <entry key="app/src/main/res/layout/label_list_layout.xml" value="0.335" />
         <entry key="app/src/main/res/layout/linear_layout.xml" value="0.165" />
         <entry key="app/src/main/res/layout/nav_header.xml" value="0.165" />
         <entry key="app/src/main/res/layout/nav_header_main.xml" value="0.21875" />

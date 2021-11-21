@@ -21,6 +21,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.notesapp.R
 import com.google.android.material.imageview.ShapeableImageView
 import com.squareup.picasso.Picasso
+import java.text.SimpleDateFormat
+import java.util.*
 
 object Util {
     fun validateEmail(emailValue: String, email: EditText): Boolean {
@@ -117,19 +119,25 @@ object Util {
         var searchview: SearchView = activity.findViewById(R.id.searchView)
         var deleteLabel: TextView = activity.findViewById(R.id.deleteLabelTV)
         var fundoLabel: TextView = activity.findViewById(R.id.FunDo)
+        activity.findViewById<ImageView>(R.id.archiveButton).isVisible = false
 
-        if (fragment.equals("homefragment")) {
+        if (fragment == "homefragment") {
             userIcon.isVisible = true
             searchview.isVisible = true
             deleteLabel.isVisible = false
             layout.isVisible = true
             fundoLabel.isVisible = true
+            fundoLabel.text = "Fundoo"
         } else {
             userIcon.isVisible = false
             searchview.isVisible = false
             deleteLabel.isVisible = true
             layout.isVisible = false
             fundoLabel.isVisible = false
+            if(fragment == "archivefragment")
+                deleteLabel.text = "Archived"
+            else
+                deleteLabel.text = "Deleted"
         }
 
         deleteBtn.isVisible = false
@@ -194,6 +202,16 @@ object Util {
             @Suppress("DEPRECATION")
             return networkInfo.isConnected
         }
+    }
+    fun getDate(milliSeconds: Long): String? {
+        val dateFormat = "dd/MM/yy hh:mm"
+        // Create a DateFormatter object for displaying date in specified format.
+        val formatter = SimpleDateFormat(dateFormat)
+
+        // Create a calendar object that will convert the date and time value in milliseconds to date.
+        val calendar = Calendar.getInstance()
+        calendar.timeInMillis = milliSeconds
+        return formatter.format(calendar.time)
     }
 
 }
