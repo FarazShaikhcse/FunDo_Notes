@@ -199,14 +199,17 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         drawerLayout.closeDrawer(GravityCompat.START)
         when (item.itemId) {
             R.id.menuNotes -> {
+                SharedPref.addString("NotesType", "MainNotes")
+                navMenu.getMenu().getItem(0).setChecked(true)
                 sharedViewModel.setGotoHomePageStatus(true)
             }
             R.id.menuAddNotes -> {
                 sharedViewModel.setGoToAddNotesPageStatus(true)
             }
             R.id.menuReminder -> {
-                Toast.makeText(applicationContext, "Clicked reminder menu", Toast.LENGTH_LONG)
-                    .show()
+                SharedPref.addString("NotesType", "Reminder")
+                navMenu.getMenu().getItem(1).setChecked(true)
+                sharedViewModel.setGotoHomePageStatus(true)
             }
             R.id.menuLabel -> {
                 sharedViewModel.setGoToAddLabelPageStatus(true)
@@ -218,7 +221,9 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 sharedViewModel.setGoToDeletedNotesPageStatus(true)
             }
             R.id.menuArchived -> {
-                sharedViewModel.setGoToArchivedNotesPageStatus(true)
+                SharedPref.addString("NotesType", "Archived")
+                navMenu.getMenu().getItem(5).setChecked(true)
+                sharedViewModel.setGotoHomePageStatus(true)
             }
 
         }
@@ -246,6 +251,11 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             }
         }
         return super.onOptionsItemSelected(item)
+    }
+
+    override fun onStart() {
+        super.onStart()
+        SharedPref.addString("NotesType", "MainNotes")
     }
 
 

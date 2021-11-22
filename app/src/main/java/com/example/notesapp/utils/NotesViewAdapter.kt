@@ -15,8 +15,8 @@ import kotlin.collections.ArrayList
 
 class NotesViewAdapter(
     var notes: MutableList<NoteEntity>
-) : RecyclerView.Adapter<NotesViewAdapter.TodoViewHolder>(), Filterable {
-    inner class TodoViewHolder(itemview: View, listener: onItemClickListner) :
+) : RecyclerView.Adapter<NotesViewAdapter.NotesViewHolder>(), Filterable {
+    inner class NotesViewHolder(itemview: View, listener: onItemClickListner) :
         RecyclerView.ViewHolder(itemview) {
         init {
             itemview.setOnClickListener {
@@ -40,12 +40,12 @@ class NotesViewAdapter(
         mListner = listener
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TodoViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): NotesViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.grid_layout, parent, false)
-        return TodoViewHolder(view, mListner)
+        return NotesViewHolder(view, mListner)
     }
 
-    override fun onBindViewHolder(holder: TodoViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: NotesViewHolder, position: Int) {
         val title = holder.itemView.findViewById<TextView>(R.id.gridTitle)
         val note = holder.itemView.findViewById<TextView>(R.id.gridNote)
         val reminder = holder.itemView.findViewById<TextView>(R.id.reminderGrid)

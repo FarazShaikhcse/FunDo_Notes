@@ -35,5 +35,8 @@ interface NoteDao {
     @Query("Update notes set archived=:isArchived, modifiedtime=:time where uid=:uid and noteid=:noteid")
     fun archiveNotes(uid: String, noteid: String, isArchived: Boolean, time: String):Int
 
+    @Query("Select * from notes where uid=:uid and reminder!=:reminder")
+    fun readReminderNotes(uid: String, reminder: Long = 0L):MutableList<NoteEntity>
+
 
 }

@@ -32,6 +32,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.imageview.ShapeableImageView
 import com.google.android.material.navigation.NavigationView
 import com.squareup.picasso.Picasso
+import kotlinx.android.synthetic.main.fragment_home.*
 
 
 class HomeFragment : Fragment(), SearchView.OnCloseListener {
@@ -48,12 +49,14 @@ class HomeFragment : Fragment(), SearchView.OnCloseListener {
     lateinit var getImage: ActivityResultLauncher<String>
     lateinit var adapter: NotesViewAdapter
     lateinit var linearAdpater: NotesViewAdapter
-    lateinit var gridrecyclerView: RecyclerView
+    lateinit var recyclerView: RecyclerView
     lateinit var mainHandler: Handler
     var noteList = mutableListOf<NoteEntity>()
     var tempList = mutableListOf<NoteEntity>()
     var email: String? = null
     var fullName: String? = null
+    lateinit var linearLayoutManager: LinearLayoutManager
+    lateinit var gridLayoutManager: GridLayoutManager
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -69,7 +72,7 @@ class HomeFragment : Fragment(), SearchView.OnCloseListener {
         // Inflate the layout for this fragment
         val view = inflater.inflate(R.layout.fragment_home, container, false)
         (requireActivity() as AppCompatActivity).supportActionBar?.show()
-        setHomeMenu(true)
+
         var profilePhoto: Uri? = null
         mainHandler = Handler(Looper.getMainLooper())
         sharedViewModel = ViewModelProvider(
@@ -91,6 +94,8 @@ class HomeFragment : Fragment(), SearchView.OnCloseListener {
         addNotesButton = view.findViewById(R.id.addNotesButton)
         adapter = NotesViewAdapter(tempList)
         linearAdpater = NotesViewAdapter(tempList)
+        linearLayoutManager = LinearLayoutManager(requireContext())
+        gridLayoutManager =  GridLayoutManager(requireContext(), 2)
         adapter.setOnItemClickListner(object : NotesViewAdapter.onItemClickListner {
             override fun onItemClick(position: Int) {
 
@@ -116,8 +121,8 @@ class HomeFragment : Fragment(), SearchView.OnCloseListener {
             }
 
         })
-        gridrecyclerView = view.findViewById(R.id.rvNotes)
-        gridrecyclerView.layoutManager = GridLayoutManager(requireContext(), 2)
+        recyclerView = view.findViewById(R.id.rvNotes)
+        recyclerView.layoutManager = GridLayoutManager(requireContext(), 2)
         getImage = registerForActivityResult(
             ActivityResultContracts.GetContent(),
             ActivityResultCallback {
@@ -131,7 +136,7 @@ class HomeFragment : Fragment(), SearchView.OnCloseListener {
         observe()
         getUserDetails()
         getUserNotes()
-        Util.checkLayout(gridrecyclerView, adapter, layout)
+        Util.checkLayout(recyclerView, adapter, layout)
         loadAvatar(userIcon)
         homeViewModel.fetchProfile()
         listeners()
@@ -141,10 +146,7 @@ class HomeFragment : Fragment(), SearchView.OnCloseListener {
         return view
     }
 
-    private fun setHomeMenu(b: Boolean) {
-        requireActivity().findViewById<NavigationView>(R.id.myNavMenu).getMenu().getItem(0)
-            .setChecked(b);
-    }
+
 
 
     private fun searchNotes() {
@@ -175,7 +177,9 @@ class HomeFragment : Fragment(), SearchView.OnCloseListener {
     }
 
     private fun getUserNotes() {
+
         homeViewModel.readNotesFromDatabase(false, "", requireContext())
+
     }
 
 
@@ -215,6 +219,7 @@ class HomeFragment : Fragment(), SearchView.OnCloseListener {
             searchview.maxWidth = Integer.MAX_VALUE
 
         }
+
     }
 
     private fun loadAvatar(userIcon: ImageView?) {
@@ -250,7 +255,7 @@ class HomeFragment : Fragment(), SearchView.OnCloseListener {
         homeViewModel.readNotesFromDatabaseStatus.observe(viewLifecycleOwner) {
             noteList.clear()
             tempList.clear()
-            gridrecyclerView.isVisible = false
+            recyclerView.isVisible = false
             for (i in it) {
                 noteList.add(i)
             }
@@ -258,21 +263,21 @@ class HomeFragment : Fragment(), SearchView.OnCloseListener {
             SharedPref.addNoteSize("noteSize", noteList.size)
 
             if (SharedPref.get("counter") == "") {
-                gridrecyclerView.adapter = adapter
+                recyclerView.adapter = adapter
                 adapter.notifyItemInserted(noteList.size - 1)
-                gridrecyclerView.isVisible = true
+                recyclerView.isVisible = true
             } else if (SharedPref.get("counter") == "true") {
-                gridrecyclerView.isVisible = false
-                gridrecyclerView.layoutManager = LinearLayoutManager(requireContext())
+                recyclerView.isVisible = false
+                recyclerView.layoutManager = linearLayoutManager
                 linearAdpater.notifyItemInserted(noteList.size - 1)
-                gridrecyclerView.adapter = linearAdpater
-                gridrecyclerView.isVisible = true
+                recyclerView.adapter = linearAdpater
+                recyclerView.isVisible = true
             } else if (SharedPref.get("counter") == "false") {
-                gridrecyclerView.isVisible = false
-                gridrecyclerView.layoutManager = GridLayoutManager(requireContext(), 2)
+                recyclerView.isVisible = false
+                recyclerView.layoutManager = gridLayoutManager
                 adapter.notifyItemInserted(noteList.size - 1)
-                gridrecyclerView.adapter = adapter
-                gridrecyclerView.isVisible = true
+                recyclerView.adapter = adapter
+                recyclerView.isVisible = true
             }
             Log.d("reading notes", "Size of note  list is" + noteList.size)
 
@@ -283,21 +288,19 @@ class HomeFragment : Fragment(), SearchView.OnCloseListener {
             val navigationView = requireActivity().findViewById<NavigationView>(R.id.myNavMenu)
             val menu: Menu = navigationView.getMenu()
             for (i in it) {
-                if((SharedPref.get(i!!).toString() == "") or (SharedPref.get("start").toString() == "true"))  {
+                if ((SharedPref.get(i!!).toString() == "") or (SharedPref.get("start")
+                        .toString() == "true")
+                ) {
                     val labelmenu = menu.add(i)
                     labelmenu.setIcon(resources.getDrawable(R.drawable.ic_baseline_label_important_24))
                     labelmenu.setOnMenuItemClickListener {
-                        SharedPref.addString("clickedLabel", i)
-//                        setHomeMenu(false)
-//                        labelmenu.isChecked = true
-                        Log.d("menuclicked","clicked"+i)
-                        loadLabelNotes(i)
+                        Log.d("menuclicked", "clicked" + i)
                         return@setOnMenuItemClickListener false
                     }
                     SharedPref.addString(i.toString(), "updated")
                 }
             }
-            SharedPref.addString("start","false")
+            SharedPref.addString("start", "false")
         }
 
     }
@@ -320,29 +323,22 @@ class HomeFragment : Fragment(), SearchView.OnCloseListener {
 
         if (flag) {
             layout.setImageResource(R.drawable.ic_baseline_grid_on_24)
-            gridrecyclerView.isVisible = false
-            gridrecyclerView.layoutManager = LinearLayoutManager(requireContext())
-            gridrecyclerView.adapter = linearAdpater
-            gridrecyclerView.isVisible = true
+            recyclerView.isVisible = false
+            recyclerView.layoutManager = linearLayoutManager
+            recyclerView.adapter = linearAdpater
+            recyclerView.isVisible = true
             SharedPref.addString("counter", "true")
 
         } else {
             layout.setImageResource(R.drawable.ic_baseline_dehaze_24)
-            gridrecyclerView.isVisible = false
-            gridrecyclerView.layoutManager = GridLayoutManager(requireContext(), 2)
-            gridrecyclerView.adapter = adapter
-            gridrecyclerView.isVisible = true
+            recyclerView.isVisible = false
+            recyclerView.layoutManager = gridLayoutManager
+            recyclerView.adapter = adapter
+            recyclerView.isVisible = true
             SharedPref.addString("counter", "false")
 
         }
     }
-
-    override fun onStart() {
-        super.onStart()
-        view?.findViewById<NavigationView>(R.id.myNavMenu)?.getMenu()?.getItem(0)?.setChecked(true);
-
-    }
-
 
     override fun onClose(): Boolean {
         userIcon.isVisible = true

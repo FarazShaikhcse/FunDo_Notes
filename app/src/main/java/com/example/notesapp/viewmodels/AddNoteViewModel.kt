@@ -24,6 +24,11 @@ class AddNoteViewModel : ViewModel() {
     var databaseNoteUpdatedStatus = _databaseNoteUpdatedStatus as LiveData<Boolean>
     private val _databaseNoteDeletedStatus = MutableLiveData<Boolean>()
     var databaseNoteDeletedStatus = _databaseNoteDeletedStatus as LiveData<Boolean>
+    private val _databaseNoteArchivedStatus = MutableLiveData<Boolean>()
+    var databaseNoteArchivedStatus = _databaseNoteArchivedStatus as LiveData<Boolean>
+    private val _unarchiveNotesStatus = MutableLiveData<Boolean>()
+    var unarchiveNotesStatus = _unarchiveNotesStatus as LiveData<Boolean>
+
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun addNotesToDatabase(note: NoteEntity, context: Context) {
@@ -72,12 +77,23 @@ class AddNoteViewModel : ViewModel() {
         }
 
         if (titleText.isNotEmpty() && noteText.isNotEmpty()) {
-            _databaseNoteDeletedStatus.value = MainActivity.roomDBClass.noteDao.archiveNotes(
+            _databaseNoteArchivedStatus.value = MainActivity.roomDBClass.noteDao.archiveNotes(
                 SharedPref.get("fuid").toString(),
                 SharedPref.get("noteid").toString(), isArchived, time
             ) > 0
 
         }
+    }
+
+    fun unArchiveNotes( context: Context) {
+        val time = LocalDateTime.now().toString()
+        if (Util.checkInternet(context)) {
+            FireBaseDatabase.archiveNotesInDatabase(false, time)
+        }
+        _unarchiveNotesStatus.value = MainActivity.roomDBClass.noteDao.archiveNotes(
+            SharedPref.get("fuid").toString(),
+            SharedPref.get("noteid").toString(), false, time
+        ) > 0
     }
 
 }

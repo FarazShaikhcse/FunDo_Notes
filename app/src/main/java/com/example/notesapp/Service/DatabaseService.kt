@@ -206,4 +206,14 @@ class DatabaseService {
         }
     }
 
+    suspend fun readNotesWithReminder(): MutableList<NoteEntity>? {
+        return withContext(Dispatchers.IO) {
+            val roomNoteList = MainActivity.roomDBClass.noteDao.readReminderNotes(
+                SharedPref.get("fuid").toString()
+            )
+
+            roomNoteList
+        }
+    }
+
 }

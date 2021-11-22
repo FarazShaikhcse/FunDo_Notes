@@ -112,8 +112,10 @@ class AddNoteFragment : Fragment(), DatePickerDialog.OnDateSetListener,
     private fun archiveNotes() {
         val titleText = notesTitle.text.toString()
         val noteText = notesContent.text.toString()
-
-        addNoteViewModel.archiveNotes(titleText, noteText, true, requireContext())
+        if(SharedPref.get("NotesType").toString() == "Archived")
+            addNoteViewModel.unArchiveNotes(requireContext())
+        else
+            addNoteViewModel.archiveNotes(titleText, noteText, true, requireContext())
     }
 
     private fun displayLabels() {
@@ -131,6 +133,10 @@ class AddNoteFragment : Fragment(), DatePickerDialog.OnDateSetListener,
             notesContent.setText(SharedPref.get("note").toString())
             deleteBtn.isVisible = true
             archivebtn.isVisible = true
+            if(SharedPref.get("NotesType").toString() == "Archived")
+                archivebtn.setImageResource(R.drawable.ic_baseline_unarchive_24)
+            else
+                archivebtn.setImageResource(R.drawable.ic_baseline_archive_24)
         }
     }
 
@@ -228,6 +234,27 @@ class AddNoteFragment : Fragment(), DatePickerDialog.OnDateSetListener,
             var mListView = view?.findViewById<RecyclerView>(R.id.labelRV)
             mListView?.layoutManager = LinearLayoutManager(requireContext())
             mListView?.adapter = adapter
+        }
+        addNoteViewModel.databaseNoteArchivedStatus.observe(viewLifecycleOwner){
+            if (it) {
+                clearSharedPref()
+                Toast.makeText(requireContext(), "Archived Notes", Toast.LENGTH_SHORT).show()
+                sharedViewModel.setGotoHomePageStatus(true)
+
+            } else {
+                Toast.makeText(
+                    requireContext(),
+                    "Error in archiving notes",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+        addNoteViewModel.unarchiveNotesStatus.observe(viewLifecycleOwner) {
+            if (it) {
+                Toast.makeText(requireContext(), "Unarchived successfully", Toast.LENGTH_SHORT).show()
+                SharedPref.addString("NotesType", "MainNotes")
+                sharedViewModel.setGotoHomePageStatus(true)
+            }
         }
     }
 
