@@ -216,4 +216,13 @@ class DatabaseService {
         }
     }
 
+    suspend fun readLimitedNotes(modifiedTime: String): MutableList<NoteEntity>? {
+        return withContext(Dispatchers.IO) {
+
+            val roomNoteList = FireBaseDatabase.readNotes(modifiedTime, false, false)
+            Log.d("paginationdbserv", roomNoteList.size.toString())
+            roomNoteList
+        }
+    }
+
 }

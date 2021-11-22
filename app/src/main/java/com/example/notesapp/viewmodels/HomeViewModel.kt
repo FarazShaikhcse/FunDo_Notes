@@ -57,7 +57,7 @@ class HomeViewModel : ViewModel() {
     }
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-    fun readNotesFromDatabase(isDeleted: Boolean, label: String, context: Context) {
+    fun readNotesFromDatabase(context: Context) {
         viewModelScope.launch {
             if (SharedPref.get("NotesType").toString() == "Reminder") {
                 val noteList = DatabaseService().readNotesWithReminder()
@@ -71,6 +71,20 @@ class HomeViewModel : ViewModel() {
             else {
                 val noteList = DatabaseService().readNotes(false, true, context)
                 _readNotesFromDatabaseStatus.value = noteList
+            }
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    fun readNotesFromDatabaseWithPagination(modifiedTime: String, context: Context) {
+        viewModelScope.launch {
+            if (SharedPref.get("NotesType").toString() == "MainNotes") {
+                val noteList = DatabaseService().readLimitedNotes(modifiedTime)
+                Log.d("listsize", noteList?.size.toString())
+                _readNotesFromDatabaseStatus.value = noteList
+            }
+            else {
+                readNotesFromDatabase(context)
             }
         }
     }
