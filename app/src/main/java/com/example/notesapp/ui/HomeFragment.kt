@@ -17,6 +17,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
+import androidx.core.app.NotificationManagerCompat
 import androidx.core.view.isVisible
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.GridLayoutManager
@@ -25,6 +26,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.notesapp.R
 import com.example.notesapp.service.AuthenticationService
 import com.example.notesapp.service.DatabaseService
+import com.example.notesapp.service.notification.NotificationService
 import com.example.notesapp.service.roomdb.NoteEntity
 import com.example.notesapp.utils.*
 import com.example.notesapp.viewmodels.*
@@ -86,6 +88,12 @@ class HomeFragment : Fragment(), SearchView.OnCloseListener {
             )[AddLabelViewModel::class.java]
         homeViewModel =
             ViewModelProvider(requireActivity(), HomeViewModelFactory())[HomeViewModel::class.java]
+        val notificationService =  NotificationService(requireContext())
+        notificationService.createNotificationChannel(requireContext(),
+            NotificationManagerCompat.IMPORTANCE_DEFAULT, false,
+            getString(R.string.app_name), "App notification channel.")
+        val notificationManager = NotificationManagerCompat.from(requireContext())
+        notificationManager.notify(1001, notificationService.createSampleDataNotification(requireContext()).build())
         dialog = Util.createDialog(requireContext())
         userIcon = requireActivity().findViewById(R.id.userProfile)
         layout = requireActivity().findViewById(R.id.notesLayout)
@@ -145,8 +153,6 @@ class HomeFragment : Fragment(), SearchView.OnCloseListener {
         DatabaseService().sync(requireContext())
         return view
     }
-
-
 
 
     private fun searchNotes() {
@@ -354,6 +360,9 @@ class HomeFragment : Fragment(), SearchView.OnCloseListener {
             mainHandler.postDelayed(this, 120000)
         }
     }
+
+
+
 
     override fun onPause() {
         super.onPause()
