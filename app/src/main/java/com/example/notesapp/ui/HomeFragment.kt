@@ -182,7 +182,7 @@ class HomeFragment : Fragment(), SearchView.OnCloseListener {
                 }
             }
         })
-        DatabaseService().sync(requireContext())
+//        DatabaseService().sync(requireContext())
         return view
     }
 
@@ -306,24 +306,15 @@ class HomeFragment : Fragment(), SearchView.OnCloseListener {
                 progressBar.visibility = View.GONE
                 //isLoading = false
             }
-            if (it.size == 1) {
-                noteList.add(it[0])
-                tempList.add(it[0])
-                startTime = it[0].modifiedTime
-                adapter.notifyItemInserted(tempList.size - 1)
-                progressBar.visibility = View.GONE
-                //isLoading = false
-            } else if (it.size > 1) {
-                startTime = it[0].modifiedTime
-                for (i in it.size - 1 downTo 0) {
-                    if (!it[i].deleted && !it[i].archived) {
+            else if (it.size > 1) {
+                startTime = it[it.size-1].modifiedTime
+                for (i in 0 .. it.size - 1 ) {
                         noteList.add(it[i])
                         tempList.add(it[i])
                         Log.d("Limited", startTime)
                         adapter.notifyItemInserted(tempList.size - 1)
-
                         progressBar.visibility = View.GONE
-                    }
+
                 }
             }
             Log.d("reading notes", "Size of note  list is" + noteList.size)

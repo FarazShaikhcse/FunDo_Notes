@@ -14,12 +14,12 @@ import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import org.json.JSONObject
-import java.time.LocalDateTime
 import kotlin.coroutines.suspendCoroutine
 
 
 class FireBaseDatabase {
     companion object {
+        lateinit var dbref : DocumentSnapshot
         fun addUser(user: User, listner: (Boolean) -> Unit) {
             val db = FirebaseFirestore.getInstance()
             val user = hashMapOf(
@@ -78,32 +78,69 @@ class FireBaseDatabase {
             }
         }
 
-        suspend fun readNotes(isDeleted: Boolean, isArchived: Boolean): MutableList<NoteEntity> {
+            suspend fun readNotes(modifiedTime: String, isDeleted: Boolean, isArchived: Boolean): MutableList<NoteEntity> {
             return suspendCoroutine { cont ->
                 var list = mutableListOf<NoteEntity>()
                 val db = FirebaseFirestore.getInstance()
-                db.collection("users").document(AuthenticationService.checkUser().toString())
-                    .collection("notes").orderBy("time", Query.Direction.DESCENDING)
-                    .whereEqualTo("deleted", isDeleted)
-                    .whereEqualTo("archived", isArchived)
-                    .get().addOnSuccessListener { result ->
-                        for (doc in result) {
-                            val title = doc.get("title").toString()
-                            val note = doc.get("note").toString()
-                            val time = doc.get("time").toString()
-                            val modifiedTime = doc.get("modifiedTime").toString()
-                            val userNote = NoteEntity(
-                                time, SharedPref.get("fuid").toString(),
-                                title, note, modifiedTime, isDeleted, isArchived
-                            )
-                            list.add(userNote)
+
+                if(modifiedTime == "") {
+                    db.collection("users").document(AuthenticationService.checkUser().toString())
+                        .collection("notes")
+                        .whereEqualTo("deleted", isDeleted)
+                        .whereEqualTo("archived", isArchived)
+                        .orderBy("modifiedTime", Query.Direction.DESCENDING)
+                        .limit(10)
+                        .get().addOnSuccessListener { result ->
+                            for (doc in result) {
+                                val title = doc.get("title").toString()
+                                val note = doc.get("note").toString()
+                                val time = doc.get("time").toString()
+                                val modifiedTime1 = doc.get("modifiedTime").toString()
+                                val userNote = NoteEntity(
+                                    time, SharedPref.get("fuid").toString(),
+                                    title, note, modifiedTime1, isDeleted, isArchived
+                                )
+                                list.add(userNote)
+                                dbref = doc
+                            }
+
+                            cont.resumeWith(Result.success(list))
                         }
-                        cont.resumeWith(Result.success(list))
-                    }
-                    .addOnFailureListener { exception ->
-                        Log.w("Firebasedatabase", "Error getting documents.", exception)
-                        cont.resumeWith(Result.failure(exception))
-                    }
+                        .addOnFailureListener { exception ->
+                            Log.w("Firebasedatabase", "Error getting documents.", exception)
+                            cont.resumeWith(Result.failure(exception))
+                        }
+
+                }
+                else
+                {
+                    db.collection("users").document(AuthenticationService.checkUser().toString())
+                        .collection("notes")
+                        .whereEqualTo("deleted", isDeleted)
+                        .whereEqualTo("archived", isArchived)
+                        .orderBy("modifiedTime", Query.Direction.DESCENDING)
+                        .startAfter(dbref)
+                        .limit(10)
+                        .get().addOnSuccessListener { result ->
+                            for (doc in result) {
+                                val title = doc.get("title").toString()
+                                val note = doc.get("note").toString()
+                                val time = doc.get("time").toString()
+                                val modifiedTime2 = doc.get("modifiedTime").toString()
+                                val userNote = NoteEntity(
+                                    time, SharedPref.get("fuid").toString(),
+                                    title, note, modifiedTime2, isDeleted, isArchived
+                                )
+                                list.add(userNote)
+                                dbref = doc
+                            }
+                            cont.resumeWith(Result.success(list))
+                        }
+                        .addOnFailureListener { exception ->
+                            Log.w("Firebasedatabase", "Error getting documents.", exception)
+                            cont.resumeWith(Result.failure(exception))
+                        }
+                }
             }
         }
 
@@ -418,6 +455,70 @@ class FireBaseDatabase {
                         Log.w("Firebasedatabase", "Error getting documents.", exception)
                         cont.resumeWith(Result.failure(exception))
                     }
+            }
+        }
+
+        suspend fun readReminderNotes(modifiedTime: String, isDeleted: Boolean, isArchived: Boolean): MutableList<NoteEntity>? {
+            return suspendCoroutine { cont ->
+                var list = mutableListOf<NoteEntity>()
+                val db = FirebaseFirestore.getInstance()
+
+                if(modifiedTime == "") {
+                    db.collection("users").document(AuthenticationService.checkUser().toString())
+                        .collection("notes")
+                        .whereNotEqualTo("reminder", 0)
+                        .orderBy("reminder", Query.Direction.DESCENDING)
+                        .limit(10)
+                        .get().addOnSuccessListener { result ->
+                            for (doc in result) {
+                                val title = doc.get("title").toString()
+                                val note = doc.get("note").toString()
+                                val time = doc.get("time").toString()
+                                val modifiedTime1 = doc.get("modifiedTime").toString()
+                                val userNote = NoteEntity(
+                                    time, SharedPref.get("fuid").toString(),
+                                    title, note, modifiedTime1, isDeleted, isArchived
+                                )
+                                list.add(userNote)
+                                dbref = doc
+                            }
+
+                            cont.resumeWith(Result.success(list))
+                        }
+                        .addOnFailureListener { exception ->
+                            Log.w("Firebasedatabase", "Error getting documents.", exception)
+                            cont.resumeWith(Result.failure(exception))
+                        }
+
+                }
+                else
+                {
+                    db.collection("users").document(AuthenticationService.checkUser().toString())
+                        .collection("notes")
+                        .whereNotEqualTo("reminder", 0)
+                        .orderBy("reminder", Query.Direction.DESCENDING)
+                        .startAfter(dbref)
+                        .limit(10)
+                        .get().addOnSuccessListener { result ->
+                            for (doc in result) {
+                                val title = doc.get("title").toString()
+                                val note = doc.get("note").toString()
+                                val time = doc.get("time").toString()
+                                val modifiedTime2 = doc.get("modifiedTime").toString()
+                                val userNote = NoteEntity(
+                                    time, SharedPref.get("fuid").toString(),
+                                    title, note, modifiedTime2, isDeleted, isArchived
+                                )
+                                list.add(userNote)
+                                dbref = doc
+                            }
+                            cont.resumeWith(Result.success(list))
+                        }
+                        .addOnFailureListener { exception ->
+                            Log.w("Firebasedatabase", "Error getting documents.", exception)
+                            cont.resumeWith(Result.failure(exception))
+                        }
+                }
             }
         }
 

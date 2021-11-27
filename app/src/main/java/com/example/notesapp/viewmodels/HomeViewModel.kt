@@ -16,7 +16,6 @@ import com.example.notesapp.service.Storage
 import com.example.notesapp.service.roomdb.NoteEntity
 import com.example.notesapp.utils.SharedPref
 import kotlinx.coroutines.launch
-import okhttp3.internal.Util
 
 class HomeViewModel : ViewModel() {
     private val _profilePhotoFetch = MutableLiveData<Uri>()
@@ -78,14 +77,19 @@ class HomeViewModel : ViewModel() {
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     fun readNotesFromDatabaseWithPagination(modifiedTime: String, context: Context) {
         viewModelScope.launch {
+            var noteList : MutableList<NoteEntity> = ArrayList()
             if (SharedPref.get("NotesType").toString() == "MainNotes") {
-                val noteList = DatabaseService().readLimitedNotes(modifiedTime)
-                Log.d("listsize", noteList?.size.toString())
-                _readNotesFromDatabaseStatus.value = noteList
+                noteList = DatabaseService().readLimitedNotes(modifiedTime, false, false)!!
+
             }
-            else {
-                readNotesFromDatabase(context)
+            else if(SharedPref.get("NotesType").toString() == "Archived"){
+                noteList = DatabaseService().readLimitedNotes(modifiedTime, false, true)!!
             }
+            else if(SharedPref.get("NotesType").toString() == "Reminder"){
+                noteList = DatabaseService().readReminderNotes(modifiedTime, false, false)!!
+            }
+
+            _readNotesFromDatabaseStatus.value = noteList
         }
     }
 
