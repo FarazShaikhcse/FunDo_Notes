@@ -34,7 +34,7 @@
                 android:layout_marginTop="8dp"
                 android:background="@drawable/reminderbg"
                 android:text=""
-                android:textColor="@color/white"
+                android:textColor="@color/black"
                 android:drawableLeft="@drawable/ic_baseline_alarm_24"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"

@@ -48,7 +48,6 @@ class HomeFragment : Fragment(), SearchView.OnCloseListener {
     private lateinit var addLabelViewModel: AddLabelViewModel
     private lateinit var getImage: ActivityResultLauncher<String>
     private lateinit var adapter: NotesViewAdapter
-    private lateinit var linearAdpater: NotesViewAdapter
     private lateinit var recyclerView: RecyclerView
     private lateinit var mainHandler: Handler
     private lateinit var progressBar: ProgressBar
@@ -99,24 +98,11 @@ class HomeFragment : Fragment(), SearchView.OnCloseListener {
         addNotesButton = view.findViewById(R.id.addNotesButton)
         progressBar = view.findViewById(R.id.rvProgressBar)
         adapter = NotesViewAdapter(tempList)
-        linearAdpater = NotesViewAdapter(tempList)
         linearLayoutManager = LinearLayoutManager(requireContext())
         gridLayoutManager =  GridLayoutManager(requireContext(), 2)
         adapter.setOnItemClickListner(object : NotesViewAdapter.onItemClickListner {
             override fun onItemClick(position: Int) {
 
-                setValuesForUpdation(position)
-                Toast.makeText(
-                    requireContext(),
-                    "You clicked item ${position + 1}",
-                    Toast.LENGTH_SHORT
-                ).show()
-                sharedViewModel.setGoToAddNotesPageStatus(true)
-            }
-
-        })
-        linearAdpater.setOnItemClickListner(object : NotesViewAdapter.onItemClickListner {
-            override fun onItemClick(position: Int) {
                 setValuesForUpdation(position)
                 Toast.makeText(
                     requireContext(),
@@ -363,7 +349,7 @@ class HomeFragment : Fragment(), SearchView.OnCloseListener {
             layout.setImageResource(R.drawable.ic_baseline_grid_on_24)
             recyclerView.isVisible = false
             recyclerView.layoutManager = linearLayoutManager
-            recyclerView.adapter = linearAdpater
+            recyclerView.adapter = adapter
             recyclerView.isVisible = true
             SharedPref.addString("counter", "true")
 

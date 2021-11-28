@@ -19,6 +19,14 @@ object SharedPref {
 
     fun get(key: String): String? = sharedPreferences.getString(key, "")
 
+    fun addInt(key: String, value: Int) {
+        val editor = sharedPreferences.edit()
+        editor.putInt(key, value)
+        editor.apply()
+    }
+
+    fun getInt(key: String): Int = sharedPreferences.getInt(key, -1)
+
     fun clearAll() {
         val editor = sharedPreferences.edit()
         editor.clear()

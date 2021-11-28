@@ -1,5 +1,9 @@
 package com.example.notesapp
 
+import android.app.AlarmManager
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.Context
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -10,6 +14,8 @@ import android.widget.ImageView
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.ActionBarDrawerToggle
+import androidx.core.content.ContextCompat
+import androidx.core.content.ContextCompat.getSystemService
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.lifecycle.ViewModelProvider
@@ -30,6 +36,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     companion object {
         lateinit var roomDBClass: RoomDatabase
+        lateinit var alarmManager: AlarmManager
     }
 
     lateinit var flashFragment: SplashFragment
@@ -52,6 +59,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         val toggle =
             ActionBarDrawerToggle(this, drawerLayout, toolbar, R.string.open, R.string.close)
         drawerLayout.addDrawerListener(toggle)
+
         toggle.isDrawerIndicatorEnabled = true
         toggle.syncState()
         navMenu.setNavigationItemSelectedListener(this)
@@ -67,6 +75,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
         roomDBClass = Room.databaseBuilder(applicationContext, RoomDatabase::class.java, "myDB")
             .fallbackToDestructiveMigration().allowMainThreadQueries().build()
+        createNotificationChannel()
+        alarmManager =  getSystemService(Context.ALARM_SERVICE) as AlarmManager
         SharedPref.addString("start","true")
     }
 
@@ -256,6 +266,17 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     override fun onStart() {
         super.onStart()
         SharedPref.addString("NotesType", "MainNotes")
+    }
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun createNotificationChannel()
+    {
+        val name = "Reminder"
+        val desc = "reminder for notes"
+        val importance = NotificationManager.IMPORTANCE_HIGH
+        val channel = NotificationChannel("reminder", name, importance)
+        channel.description = desc
+        val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.createNotificationChannel(channel)
     }
 
 

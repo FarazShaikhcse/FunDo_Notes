@@ -27,7 +27,22 @@ import com.google.android.material.imageview.ShapeableImageView
 import java.text.SimpleDateFormat
 import java.time.LocalDateTime
 import java.util.*
+import android.content.Context.ALARM_SERVICE
 
+import androidx.core.content.ContextCompat.getSystemService
+
+import android.app.AlarmManager
+
+import android.app.PendingIntent
+import android.content.Context
+
+import com.example.notesapp.MainActivity
+
+import com.example.notesapp.service.notification.AlarmReceiver
+
+import android.content.Intent
+import androidx.core.content.ContextCompat
+import androidx.core.content.ContextCompat.getSystemServiceName
 
 
 class AddNoteFragment : Fragment(), DatePickerDialog.OnDateSetListener,
@@ -290,12 +305,31 @@ class AddNoteFragment : Fragment(), DatePickerDialog.OnDateSetListener,
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.M)
     private fun addReminder(timeInMilli: Long) {
         val context = requireContext()
         val titleText = notesTitle.text.toString()
         val noteText = notesContent.text.toString()
         val time = LocalDateTime.now().toString()
+        val intent = Intent(requireContext(), AlarmReceiver::class.java)
+        intent.putExtra("titleExtra", titleText)
+        intent.putExtra("noteExtra", noteText)
+        val notifid = SharedPref.getInt("notificationID")
+        SharedPref.addInt("notificationID", notifid+1)
 
+        val pendingIntent = PendingIntent.getBroadcast(
+            requireContext(),
+            notifid,
+            intent,
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
+
+        val alarmManager = MainActivity.alarmManager
+        alarmManager.setExactAndAllowWhileIdle(
+            AlarmManager.RTC_WAKEUP,
+            timeInMilli,
+            pendingIntent
+        )
         val note = NoteEntity(time, SharedPref.get("fuid").toString(), titleText, noteText, time,
             reminder = timeInMilli)
         if (titleText.isNotEmpty() && noteText.isNotEmpty()) {

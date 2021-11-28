@@ -49,11 +49,6 @@ class DeletedNotesFragment : Fragment() {
         adapter = NotesViewAdapter(noteList)
         gridrecyclerView = view.findViewById(R.id.rvNotes)
         gridrecyclerView.layoutManager = GridLayoutManager(requireContext(), 2)
-        Util.checkLayout(
-            gridrecyclerView,
-            adapter,
-            requireActivity().findViewById(R.id.notesLayout)
-        )
         adapter.setOnItemClickListner(object : NotesViewAdapter.onItemClickListner {
             @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
             override fun onItemClick(position: Int) {
@@ -64,8 +59,6 @@ class DeletedNotesFragment : Fragment() {
 
         })
         deletedNoteViewModel.readNotesFromDatabase(true, requireContext())
-        gridrecyclerView = view.findViewById(R.id.rvNotes)
-        gridrecyclerView.layoutManager = GridLayoutManager(requireContext(), 2)
         deletedNoteViewModel.readNotesFromDatabaseStatus.observe(viewLifecycleOwner) {
             noteList.clear()
             gridrecyclerView.isVisible = false
