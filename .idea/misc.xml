@@ -18,6 +18,7 @@
         <entry key="app/src/main/res/drawable/ic_baseline_search_24.xml" value="0.1" />
         <entry key="app/src/main/res/drawable/ic_email.xml" value="0.13385416666666666" />
         <entry key="app/src/main/res/drawable/ic_password.xml" value="0.13385416666666666" />
+        <entry key="app/src/main/res/drawable/reminderbg.xml" value="0.1359375" />
         <entry key="app/src/main/res/drawable/roundbtn.xml" value="0.1638888888888889" />
         <entry key="app/src/main/res/drawable/toolbarbg.xml" value="0.1" />
         <entry key="app/src/main/res/layout/Custom_dialog.xml" value="0.25" />

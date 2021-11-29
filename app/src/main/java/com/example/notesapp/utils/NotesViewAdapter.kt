@@ -54,13 +54,15 @@ class NotesViewAdapter(
         holder.itemView.apply {
             title.text = filteredNotes[position].title
             note.text = filteredNotes[position].content
-            if(filteredNotes[position].reminder != 0L) {
-
-                reminder.text = Util.getDate(filteredNotes[position].reminder)
-                reminder.isVisible = true
+            if(filteredNotes[position].reminder == 0L) {
+                reminder.isVisible = false
             }
             else
-                reminder.isVisible = false
+            {
+                reminder.isVisible = true
+                reminder.text = Util.getDate(filteredNotes[position].reminder)
+            }
+
 
         }
 

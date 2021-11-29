@@ -192,9 +192,10 @@ class HomeFragment : Fragment(), SearchView.OnCloseListener {
     private fun setValuesForUpdation(position: Int) {
         SharedPref.setUpdateStatus("updateStatus", true)
         SharedPref.updateNotePosition("position", position + 1)
-        SharedPref.addString("title", noteList[position].title)
-        SharedPref.addString("note", noteList[position].content)
-        SharedPref.addString("noteid", noteList[position].noteid)
+        SharedPref.addString(Constants.TITLE, noteList[position].title)
+        SharedPref.addString(Constants.NOTE, noteList[position].content)
+        SharedPref.addString(Constants.NOTEID, noteList[position].noteid)
+        SharedPref.addLong(Constants.REMINDER, noteList[position].reminder)
     }
 
     private fun getUserDetails() {

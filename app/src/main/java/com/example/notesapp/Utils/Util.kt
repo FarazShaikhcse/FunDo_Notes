@@ -205,7 +205,7 @@ object Util {
     }
 
     fun getDate(milliSeconds: Long): String? {
-        val dateFormat = "dd/MM/yy hh:mm"
+        val dateFormat = "dd/MM/yy HH:mm"
         val formatter = SimpleDateFormat(dateFormat)
         val calendar = Calendar.getInstance()
         calendar.timeInMillis = milliSeconds
