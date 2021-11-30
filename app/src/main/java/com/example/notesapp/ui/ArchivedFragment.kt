@@ -17,13 +17,11 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.notesapp.R
 import com.example.notesapp.service.roomdb.NoteEntity
-import com.example.notesapp.utils.NotesViewAdapter
+import com.example.notesapp.adapter.NotesViewAdapter
 import com.example.notesapp.utils.SharedPref
 import com.example.notesapp.utils.Util
 import com.example.notesapp.viewmodels.ArchiveViewModel
 import com.example.notesapp.viewmodels.ArchiveViewModelFactory
-import com.example.notesapp.viewmodels.DeletedNoteViewModel
-import com.example.notesapp.viewmodels.DeletedNoteViewModelFactory
 
 
 class ArchivedFragment : Fragment() {

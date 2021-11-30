@@ -1,4 +1,4 @@
-package com.example.notesapp.utils
+package com.example.notesapp.adapter
 
 import android.view.LayoutInflater
 import android.view.View
@@ -10,6 +10,7 @@ import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.example.notesapp.R
 import com.example.notesapp.service.roomdb.NoteEntity
+import com.example.notesapp.utils.Util
 import java.util.*
 import kotlin.collections.ArrayList
 

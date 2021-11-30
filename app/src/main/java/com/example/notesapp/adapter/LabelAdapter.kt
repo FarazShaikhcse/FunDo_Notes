@@ -1,14 +1,11 @@
-package com.example.notesapp.utils
+package com.example.notesapp.adapter
 
 import android.content.Context
-import android.opengl.Visibility
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
-import android.widget.ImageButton
 import android.widget.ImageView
-import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.example.notesapp.R
 import com.example.notesapp.viewmodels.AddLabelViewModel

@@ -1,4 +1,4 @@
-package com.example.notesapp.utils
+package com.example.notesapp.adapter
 
 import android.content.Context
 import android.util.Log
@@ -6,9 +6,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.CheckBox
-import android.widget.EditText
-import android.widget.ImageView
-import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
 import com.example.notesapp.R
 import com.example.notesapp.viewmodels.AddLabelViewModel
@@ -28,7 +25,7 @@ class LabelCBAdapter(
         return LabelViewHolder(view)
     }
 
-    override fun onBindViewHolder(holder: LabelCBAdapter.LabelViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: LabelViewHolder, position: Int) {
         val labelCB = holder.itemView.findViewById<CheckBox>(R.id.labelCheckBox)
         holder.itemView.apply {
             labelCB.setText(labels[position])

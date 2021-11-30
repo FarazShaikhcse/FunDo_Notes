@@ -20,26 +20,14 @@ import com.example.notesapp.service.roomdb.NoteEntity
 import com.example.notesapp.viewmodels.*
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.imageview.ShapeableImageView
-import java.text.SimpleDateFormat
 import java.time.LocalDateTime
 import java.util.*
-import android.content.Context.ALARM_SERVICE
 
-import androidx.core.content.ContextCompat.getSystemService
-
-import android.content.Context
-
-import com.example.notesapp.MainActivity
-
-import com.example.notesapp.service.notification.AlarmReceiver
-
-import android.content.Intent
-import androidx.core.content.ContextCompat
-import androidx.core.content.ContextCompat.getSystemServiceName
 import androidx.work.Data
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequest
 import androidx.work.WorkManager
+import com.example.notesapp.adapter.LabelCBAdapter
 import com.example.notesapp.service.notification.NotificationWork
 import com.example.notesapp.utils.*
 import java.util.concurrent.TimeUnit

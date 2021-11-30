@@ -1,4 +1,4 @@
-package com.example.notesapp.service
+package com.example.notesapp.service.pushnotfication
 
 import android.os.Build
 import android.provider.Settings.Global.getString
@@ -7,18 +7,17 @@ import android.widget.Toast
 import androidx.annotation.RequiresApi
 import com.example.notesapp.R
 import com.google.android.gms.tasks.OnCompleteListener
+import com.google.firebase.ktx.Firebase
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
+import com.google.firebase.messaging.ktx.messaging
 
 open class FbMessagingService: FirebaseMessagingService() {
 
     override fun onNewToken(token: String) {
         super.onNewToken(token)
         Log.i("SellerFirebaseService ", "Refreshed token :: $token")
-        // If you want to send messages to this application instance or
-        // manage this apps subscriptions on the server side, send the
-        // Instance ID token to your app server.
         sendRegistrationToServer(token)
     }
     private fun sendRegistrationToServer(token: String) {
@@ -29,6 +28,7 @@ open class FbMessagingService: FirebaseMessagingService() {
         super.onMessageReceived(message)
         Log.i("SellerFirebaseService ", "Message :: $message")
     }
+
 
 
 

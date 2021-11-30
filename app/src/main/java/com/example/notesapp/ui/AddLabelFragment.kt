@@ -1,6 +1,5 @@
 package com.example.notesapp.ui
 
-import android.app.Dialog
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -18,12 +17,10 @@ import com.example.notesapp.viewmodels.AddLabelViewModelFactory
 import com.example.notesapp.viewmodels.SharedViewModel
 import com.example.notesapp.viewmodels.SharedViewModelFactory
 import com.google.android.material.imageview.ShapeableImageView
-import kotlinx.android.synthetic.main.fragment_add_label.*
 
-import androidx.appcompat.content.res.AppCompatResources
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.notesapp.utils.LabelAdapter
+import com.example.notesapp.adapter.LabelAdapter
 
 
 class AddLabelFragment : Fragment() {

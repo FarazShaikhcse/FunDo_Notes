@@ -20,6 +20,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.room.Room
 import com.example.notesapp.service.RoomDatabase
 import com.example.notesapp.service.notification.NotificationHelper
+import com.example.notesapp.service.pushnotfication.FbMessagingService
 import com.example.notesapp.ui.*
 import com.example.notesapp.utils.Constants
 import com.example.notesapp.utils.Note
@@ -32,6 +33,7 @@ import com.google.android.gms.tasks.OnCompleteListener
 import com.google.android.material.navigation.NavigationView
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.messaging.FirebaseMessaging
+import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.ktx.messaging
 
 class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
@@ -81,7 +83,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             NotificationManagerCompat.IMPORTANCE_DEFAULT, false,
             "Reminder Note", "shows reminder notes")
         getFirebaseMessagingToken()
-        subscribeToMessaging()
+        subscribeToMessaging("news")
         SharedPref.addString("start","true")
         if (bundle != null) {
             if (bundle.getString("Destination") == "userNote") {
@@ -99,17 +101,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         SharedPref.addLong(Constants.REMINDER, note.reminder)
         gotoAddNotePage()
     }
-    private fun subscribeToMessaging() {
-        Firebase.messaging.subscribeToTopic("weather")
-            .addOnCompleteListener { task ->
-                var msg = getString(R.string.msg_subscribed)
-                if (!task.isSuccessful) {
-                    msg = getString(R.string.msg_subscribe_failed)
-                }
-                Log.d("firebeasemessage", msg)
-                Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
-            }
-    }
+
 
     private fun observeNavigation() {
         sharedViewModel.gotoHomePageStatus.observe(this@MainActivity, {
@@ -298,7 +290,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         super.onStart()
         SharedPref.addString(Constants.NOTES_TYPE, "MainNotes")
     }
-
     fun getFirebaseMessagingToken(){
         FirebaseMessaging.getInstance().token.addOnCompleteListener(OnCompleteListener { task ->
             if (!task.isSuccessful) {
@@ -310,6 +301,19 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         })
 
     }
+    fun subscribeToMessaging(topic: String) {
+        Firebase.messaging.subscribeToTopic(topic)
+            .addOnCompleteListener { task ->
+                var msg = "subscribed"
+                if (!task.isSuccessful) {
+                    msg = "failed to subscribe"
+                }
+                Log.d("firebeasemessage", msg)
+                Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
+            }
+    }
+
+
 
 
 }

@@ -19,10 +19,11 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
 import androidx.core.view.isVisible
 import androidx.lifecycle.ViewModelProvider
-import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import com.example.notesapp.R
+import com.example.notesapp.adapter.NotesViewAdapter
 import com.example.notesapp.service.AuthenticationService
 import com.example.notesapp.service.DatabaseService
 import com.example.notesapp.service.roomdb.NoteEntity
@@ -56,7 +57,7 @@ class HomeFragment : Fragment(), SearchView.OnCloseListener {
     var email: String? = null
     var fullName: String? = null
     lateinit var linearLayoutManager: LinearLayoutManager
-    lateinit var gridLayoutManager: GridLayoutManager
+    lateinit var gridLayoutManager: StaggeredGridLayoutManager
     var startTime = ""
     var isLoading = false
     var currentItem: Int = 0
@@ -99,7 +100,7 @@ class HomeFragment : Fragment(), SearchView.OnCloseListener {
         progressBar = view.findViewById(R.id.rvProgressBar)
         adapter = NotesViewAdapter(tempList)
         linearLayoutManager = LinearLayoutManager(requireContext())
-        gridLayoutManager =  GridLayoutManager(requireContext(), 2)
+        gridLayoutManager =  StaggeredGridLayoutManager(2, LinearLayoutManager.VERTICAL)
         adapter.setOnItemClickListner(object : NotesViewAdapter.onItemClickListner {
             override fun onItemClick(position: Int) {
 
@@ -114,7 +115,7 @@ class HomeFragment : Fragment(), SearchView.OnCloseListener {
 
         })
         recyclerView = view.findViewById(R.id.rvNotes)
-        recyclerView.layoutManager = GridLayoutManager(requireContext(), 2)
+        recyclerView.layoutManager = StaggeredGridLayoutManager( 2, LinearLayoutManager.VERTICAL)
         getImage = registerForActivityResult(
             ActivityResultContracts.GetContent(),
             ActivityResultCallback {
@@ -140,10 +141,10 @@ class HomeFragment : Fragment(), SearchView.OnCloseListener {
                 super.onScrolled(recyclerView, dx, dy)
                 Log.d("paginationdbserv", "scroll notes called")
                 if (SharedPref.get("counter") == "" || SharedPref.get("counter") == "false") {
-                    currentItem = (recyclerView.layoutManager as GridLayoutManager).childCount
-                    totalItem = (recyclerView.layoutManager as GridLayoutManager).itemCount
-                    scrolledOutItems = (recyclerView.layoutManager as GridLayoutManager)
-                        .findFirstVisibleItemPosition()
+                    currentItem = (recyclerView.layoutManager as StaggeredGridLayoutManager).childCount
+                    totalItem = (recyclerView.layoutManager as StaggeredGridLayoutManager).itemCount
+                    scrolledOutItems = (recyclerView.layoutManager as StaggeredGridLayoutManager)
+                        .findFirstVisibleItemPositions(null)[0];
                     if (!isLoading) {
                         if ((currentItem + scrolledOutItems) >= totalItem && scrolledOutItems >= 0) {
                             isLoading = true

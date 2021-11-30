@@ -19,6 +19,7 @@ import android.os.Build
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import com.example.notesapp.R
+import com.example.notesapp.adapter.NotesViewAdapter
 import com.example.notesapp.service.roomdb.NoteEntity
 
 
