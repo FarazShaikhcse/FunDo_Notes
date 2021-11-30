@@ -6,6 +6,9 @@
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="facebook_app_id">869270483605628</string>
     <string name="fb_login_protocol_scheme">fb869270483605628</string>
+    <string name="msg_token_fmt" ></string>
+    <string name="msg_subscribed" />
+    <string name="msg_subscribe_failed" />
 
 
     <color name="toolbarbgcolor">#494871</color>

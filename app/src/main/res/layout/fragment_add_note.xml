@@ -72,7 +72,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/notesContent">
+        app:layout_constraintTop_toBottomOf="@+id/reminderTV">
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/labelRV"
@@ -91,4 +91,17 @@
         android:src="@drawable/ic_baseline_alarm_24"
         app:layout_constraintBottom_toTopOf="@+id/saveButton"
         app:layout_constraintEnd_toEndOf="parent" />
+
+    <TextView
+        android:id="@+id/reminderTV"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/reminderbg"
+        android:drawableLeft="@drawable/ic_baseline_alarm_24"
+        android:visibility="visible"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/notesContent" />
 </androidx.constraintlayout.widget.ConstraintLayout>

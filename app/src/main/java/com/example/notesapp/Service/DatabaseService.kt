@@ -216,4 +216,29 @@ class DatabaseService {
         }
     }
 
+    suspend fun readLimitedNotes(modifiedTime: String, isDeleted: Boolean, isArchived: Boolean): MutableList<NoteEntity>? {
+        return withContext(Dispatchers.IO) {
+
+            val roomNoteList = FireBaseDatabase.readNotes(modifiedTime, isDeleted, isArchived)
+            Log.d("paginationdbserv", roomNoteList.size.toString())
+            roomNoteList
+        }
+    }
+
+    suspend fun readReminderNotes(
+        modifiedTime: String,
+        isDeleted: Boolean,
+        isArchived: Boolean
+    ): MutableList<NoteEntity>? {
+
+        return withContext(Dispatchers.IO) {
+
+            val roomNoteList = FireBaseDatabase.readReminderNotes(modifiedTime, isDeleted, isArchived)
+            if (roomNoteList != null) {
+                Log.d("paginationdbserv", roomNoteList.size.toString())
+            }
+            roomNoteList
+        }
+    }
+
 }

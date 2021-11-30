@@ -18,6 +18,7 @@
         <entry key="app/src/main/res/drawable/ic_baseline_search_24.xml" value="0.1" />
         <entry key="app/src/main/res/drawable/ic_email.xml" value="0.13385416666666666" />
         <entry key="app/src/main/res/drawable/ic_password.xml" value="0.13385416666666666" />
+        <entry key="app/src/main/res/drawable/reminderbg.xml" value="0.1359375" />
         <entry key="app/src/main/res/drawable/roundbtn.xml" value="0.1638888888888889" />
         <entry key="app/src/main/res/drawable/toolbarbg.xml" value="0.1" />
         <entry key="app/src/main/res/layout/Custom_dialog.xml" value="0.25" />
@@ -39,7 +40,7 @@
         <entry key="app/src/main/res/layout/fragment_reset_password.xml" value="0.1" />
         <entry key="app/src/main/res/layout/fragment_splash.xml" value="0.335" />
         <entry key="app/src/main/res/layout/gird_layout.xml" value="0.1381340579710145" />
-        <entry key="app/src/main/res/layout/grid_layout.xml" value="0.30158730158730157" />
+        <entry key="app/src/main/res/layout/grid_layout.xml" value="0.335" />
         <entry key="app/src/main/res/layout/label_checkbox_layout.xml" value="0.20108695652173914" />
         <entry key="app/src/main/res/layout/label_dialog.xml" value="0.1" />
         <entry key="app/src/main/res/layout/label_list_layout.xml" value="0.335" />

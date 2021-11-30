@@ -1,7 +1,6 @@
 package com.example.notesapp.ui
 
-import android.app.DatePickerDialog
-import android.app.TimePickerDialog
+import android.app.*
 import android.os.Build
 import android.os.Bundle
 import androidx.fragment.app.Fragment
@@ -17,21 +16,37 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.notesapp.R
-import com.example.notesapp.utils.Note
 import com.example.notesapp.service.roomdb.NoteEntity
-import com.example.notesapp.utils.LabelCBAdapter
-import com.example.notesapp.utils.SharedPref
 import com.example.notesapp.viewmodels.*
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.imageview.ShapeableImageView
 import java.text.SimpleDateFormat
 import java.time.LocalDateTime
 import java.util.*
+import android.content.Context.ALARM_SERVICE
 
+import androidx.core.content.ContextCompat.getSystemService
+
+import android.content.Context
+
+import com.example.notesapp.MainActivity
+
+import com.example.notesapp.service.notification.AlarmReceiver
+
+import android.content.Intent
+import androidx.core.content.ContextCompat
+import androidx.core.content.ContextCompat.getSystemServiceName
+import androidx.work.Data
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequest
+import androidx.work.WorkManager
+import com.example.notesapp.service.notification.NotificationWork
+import com.example.notesapp.utils.*
+import java.util.concurrent.TimeUnit
 
 
 class AddNoteFragment : Fragment(), DatePickerDialog.OnDateSetListener,
-    TimePickerDialog.OnTimeSetListener  {
+    TimePickerDialog.OnTimeSetListener {
 
     private lateinit var sharedViewModel: SharedViewModel
     private lateinit var addNoteViewModel: AddNoteViewModel
@@ -47,6 +62,7 @@ class AddNoteFragment : Fragment(), DatePickerDialog.OnDateSetListener,
     private lateinit var saveBtn: FloatingActionButton
     private lateinit var reminderBtn: FloatingActionButton
     private lateinit var adapter: LabelCBAdapter
+    private lateinit var  reminderTV : TextView
 
     var day = 0
     var year = 0
@@ -86,6 +102,8 @@ class AddNoteFragment : Fragment(), DatePickerDialog.OnDateSetListener,
         notesContent = view.findViewById(R.id.notesContent)
         saveBtn = view.findViewById(R.id.saveButton)
         reminderBtn = view.findViewById(R.id.reminderButton)
+        reminderTV = view.findViewById(R.id.reminderTV)
+        reminderTV?.isVisible = false
         addLabelViewModel.getLabelsFromDatabase(requireContext())
         clickListeners()
         observe()
@@ -112,7 +130,7 @@ class AddNoteFragment : Fragment(), DatePickerDialog.OnDateSetListener,
     private fun archiveNotes() {
         val titleText = notesTitle.text.toString()
         val noteText = notesContent.text.toString()
-        if(SharedPref.get("NotesType").toString() == "Archived")
+        if (SharedPref.get("NotesType").toString() == "Archived")
             addNoteViewModel.unArchiveNotes(requireContext())
         else
             addNoteViewModel.archiveNotes(titleText, noteText, true, requireContext())
@@ -128,15 +146,24 @@ class AddNoteFragment : Fragment(), DatePickerDialog.OnDateSetListener,
     }
 
     private fun loadNotesValuesForUpdation() {
-        if ((SharedPref.get("title").toString() != "") or (SharedPref.get("note").toString() != "")) {
-            notesTitle.setText(SharedPref.get("title").toString())
-            notesContent.setText(SharedPref.get("note").toString())
+        if ((SharedPref.get(Constants.TITLE).toString() != "") or (SharedPref.get(Constants.NOTE)
+                .toString() != "")
+        ) {
+            notesTitle.setText(SharedPref.get(Constants.TITLE).toString())
+            notesContent.setText(SharedPref.get(Constants.NOTE).toString())
             deleteBtn.isVisible = true
             archivebtn.isVisible = true
-            if(SharedPref.get("NotesType").toString() == "Archived")
+
+            if (SharedPref.get("NotesType").toString() == "Archived")
                 archivebtn.setImageResource(R.drawable.ic_baseline_unarchive_24)
             else
                 archivebtn.setImageResource(R.drawable.ic_baseline_archive_24)
+            if(SharedPref.getLong("reminder") != 0L){
+                reminderTV?.isVisible = true
+                reminderTV?.text = Util.getDate(SharedPref.getLong("reminder"))
+            }
+            else
+                reminderTV?.isVisible = false
         }
     }
 
@@ -163,22 +190,26 @@ class AddNoteFragment : Fragment(), DatePickerDialog.OnDateSetListener,
     private fun clearSharedPref() {
         SharedPref.setUpdateStatus("updateStatus", false)
         SharedPref.updateNotePosition("position", 0)
-        SharedPref.addString("title", "")
-        SharedPref.addString("note", "")
+        SharedPref.addString(Constants.TITLE, "")
+        SharedPref.addString(Constants.NOTE, "")
         SharedPref.addString("noteid", "")
+        SharedPref.addLong(Constants.REMINDER, 0L)
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun saveNote() {
         val titleText = notesTitle.text.toString()
         val noteText = notesContent.text.toString()
-
-        if (SharedPref.get("title").toString() != "" && SharedPref.get("note").toString() != "") {
+        if (SharedPref.getLong(Constants.REMINDER) != 0L && !SharedPref.getUpdateStatus("updateStatus")){
+            addReminder(SharedPref.getLong(Constants.REMINDER))
+        }
+        else if (SharedPref.get(Constants.TITLE).toString() != "" || SharedPref.get(Constants.NOTE).toString() != "") {
             val note = Note(
                 titleText,
                 noteText,
                 SharedPref.get("noteid").toString(),
-                LocalDateTime.now().toString()
+                LocalDateTime.now().toString(),
+                reminder = SharedPref.getLong(Constants.REMINDER)
             )
             addNoteViewModel.updateNotesInDatabase(note, requireContext())
         } else {
@@ -197,6 +228,7 @@ class AddNoteFragment : Fragment(), DatePickerDialog.OnDateSetListener,
     private fun observe() {
         addNoteViewModel.databaseNoteAddedStatus.observe(viewLifecycleOwner) {
             if (it) {
+                SharedPref.addString(Constants.NOTES_TYPE, "MainNotes")
                 sharedViewModel.setGotoHomePageStatus(true)
             } else {
                 Toast.makeText(requireContext(), "Error in storing notes to DB", Toast.LENGTH_SHORT)
@@ -207,6 +239,7 @@ class AddNoteFragment : Fragment(), DatePickerDialog.OnDateSetListener,
             if (it) {
                 clearSharedPref()
                 Toast.makeText(requireContext(), "updated", Toast.LENGTH_SHORT).show()
+                SharedPref.addString(Constants.NOTES_TYPE, "MainNotes")
                 sharedViewModel.setGotoHomePageStatus(true)
 
             } else {
@@ -235,10 +268,11 @@ class AddNoteFragment : Fragment(), DatePickerDialog.OnDateSetListener,
             mListView?.layoutManager = LinearLayoutManager(requireContext())
             mListView?.adapter = adapter
         }
-        addNoteViewModel.databaseNoteArchivedStatus.observe(viewLifecycleOwner){
+        addNoteViewModel.databaseNoteArchivedStatus.observe(viewLifecycleOwner) {
             if (it) {
                 clearSharedPref()
                 Toast.makeText(requireContext(), "Archived Notes", Toast.LENGTH_SHORT).show()
+                SharedPref.addString(Constants.NOTES_TYPE, "Archived")
                 sharedViewModel.setGotoHomePageStatus(true)
 
             } else {
@@ -251,7 +285,8 @@ class AddNoteFragment : Fragment(), DatePickerDialog.OnDateSetListener,
         }
         addNoteViewModel.unarchiveNotesStatus.observe(viewLifecycleOwner) {
             if (it) {
-                Toast.makeText(requireContext(), "Unarchived successfully", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Unarchived successfully", Toast.LENGTH_SHORT)
+                    .show()
                 SharedPref.addString("NotesType", "MainNotes")
                 sharedViewModel.setGotoHomePageStatus(true)
             }
@@ -286,18 +321,46 @@ class AddNoteFragment : Fragment(), DatePickerDialog.OnDateSetListener,
 
 
         if (timeInMilli > System.currentTimeMillis()) {
-            addReminder(timeInMilli)
+            reminderTV?.isVisible = true
+            SharedPref.addLong(Constants.REMINDER, timeInMilli)
+            reminderTV?.text = Util.getDate(SharedPref.getLong(Constants.REMINDER))
+        }
+        else{
+            Toast.makeText(requireContext(), "Please select older Time", Toast.LENGTH_LONG)
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.M)
     private fun addReminder(timeInMilli: Long) {
         val context = requireContext()
         val titleText = notesTitle.text.toString()
         val noteText = notesContent.text.toString()
         val time = LocalDateTime.now().toString()
+        val notifid = SharedPref.getInt("notificationID")
+        SharedPref.addInt("notificationID", notifid + 1)
+        val reminder = timeInMilli
+        val data = Data.Builder()
+        data.putString("noteTitle", titleText)
+        data.putString("noteContent", noteText)
+        data.putString("noteKey", time)
+        data.putBoolean("isDeleted", false)
+        data.putBoolean("isArchived", false)
+        data.putString("modifiedTime", time)
+        data.putLong(Constants.REMINDER, reminder)
+        val request = OneTimeWorkRequest.Builder(NotificationWork::class.java)
+            .setInputData(data.build())
+            .setInitialDelay(reminder - System.currentTimeMillis(), TimeUnit.MILLISECONDS)
+            .build()
 
-        val note = NoteEntity(time, SharedPref.get("fuid").toString(), titleText, noteText, time,
-            reminder = timeInMilli)
+        WorkManager.getInstance(requireContext()).enqueueUniqueWork(
+            time,
+            ExistingWorkPolicy.REPLACE,
+            request
+        )
+        val note = NoteEntity(
+            time, SharedPref.get("fuid").toString(), titleText, noteText, time,
+            reminder = timeInMilli
+        )
         if (titleText.isNotEmpty() && noteText.isNotEmpty()) {
             addNoteViewModel.addNotesToDatabase(note, context)
         }

@@ -39,27 +39,31 @@ import kotlinx.android.synthetic.main.fragment_home.*
 
 class HomeFragment : Fragment(), SearchView.OnCloseListener {
 
-    lateinit var dialog: Dialog
-    lateinit var userIcon: ShapeableImageView
-    lateinit var layout: ImageView
-    lateinit var deleteBtn: ImageView
-    lateinit var searchview: androidx.appcompat.widget.SearchView
-    lateinit var addNotesButton: FloatingActionButton
+    private lateinit var dialog: Dialog
+    private lateinit var userIcon: ShapeableImageView
+    private lateinit var layout: ImageView
+    private lateinit var deleteBtn: ImageView
+    private lateinit var searchview: androidx.appcompat.widget.SearchView
+    private lateinit var addNotesButton: FloatingActionButton
     private lateinit var sharedViewModel: SharedViewModel
     private lateinit var homeViewModel: HomeViewModel
     private lateinit var addLabelViewModel: AddLabelViewModel
-    lateinit var getImage: ActivityResultLauncher<String>
-    lateinit var adapter: NotesViewAdapter
-    lateinit var linearAdpater: NotesViewAdapter
-    lateinit var recyclerView: RecyclerView
-    lateinit var mainHandler: Handler
+    private lateinit var getImage: ActivityResultLauncher<String>
+    private lateinit var adapter: NotesViewAdapter
+    private lateinit var recyclerView: RecyclerView
+    private lateinit var mainHandler: Handler
+    private lateinit var progressBar: ProgressBar
     var noteList = mutableListOf<NoteEntity>()
     var tempList = mutableListOf<NoteEntity>()
     var email: String? = null
     var fullName: String? = null
     lateinit var linearLayoutManager: LinearLayoutManager
     lateinit var gridLayoutManager: GridLayoutManager
-
+    var startTime = ""
+    var isLoading = false
+    var currentItem: Int = 0
+    var totalItem: Int = 0
+    var scrolledOutItems: Int = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -100,25 +104,13 @@ class HomeFragment : Fragment(), SearchView.OnCloseListener {
         deleteBtn = requireActivity().findViewById(R.id.deleteButton)
         searchview = requireActivity().findViewById(R.id.searchView)
         addNotesButton = view.findViewById(R.id.addNotesButton)
+        progressBar = view.findViewById(R.id.rvProgressBar)
         adapter = NotesViewAdapter(tempList)
-        linearAdpater = NotesViewAdapter(tempList)
         linearLayoutManager = LinearLayoutManager(requireContext())
         gridLayoutManager =  GridLayoutManager(requireContext(), 2)
         adapter.setOnItemClickListner(object : NotesViewAdapter.onItemClickListner {
             override fun onItemClick(position: Int) {
 
-                setValuesForUpdation(position)
-                Toast.makeText(
-                    requireContext(),
-                    "You clicked item ${position + 1}",
-                    Toast.LENGTH_SHORT
-                ).show()
-                sharedViewModel.setGoToAddNotesPageStatus(true)
-            }
-
-        })
-        linearAdpater.setOnItemClickListner(object : NotesViewAdapter.onItemClickListner {
-            override fun onItemClick(position: Int) {
                 setValuesForUpdation(position)
                 Toast.makeText(
                     requireContext(),
@@ -143,14 +135,48 @@ class HomeFragment : Fragment(), SearchView.OnCloseListener {
         Util.loadToolBar(requireActivity(), "homefragment")
         observe()
         getUserDetails()
-        getUserNotes()
+//        getUserNotes()
+        getNotes()
         Util.checkLayout(recyclerView, adapter, layout)
         loadAvatar(userIcon)
         homeViewModel.fetchProfile()
         listeners()
         searchNotes()
         Log.d("homefragment", "userid" + SharedPref.get("fuid"))
-        DatabaseService().sync(requireContext())
+        recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                super.onScrolled(recyclerView, dx, dy)
+                Log.d("paginationdbserv", "scroll notes called")
+                if (SharedPref.get("counter") == "" || SharedPref.get("counter") == "false") {
+                    currentItem = (recyclerView.layoutManager as GridLayoutManager).childCount
+                    totalItem = (recyclerView.layoutManager as GridLayoutManager).itemCount
+                    scrolledOutItems = (recyclerView.layoutManager as GridLayoutManager)
+                        .findFirstVisibleItemPosition()
+                    if (!isLoading) {
+                        if ((currentItem + scrolledOutItems) >= totalItem && scrolledOutItems >= 0) {
+                            isLoading = true
+                            progressBar.visibility = View.VISIBLE
+                            getNotes()
+                        }
+                    }
+                }
+                else {
+                    currentItem = (recyclerView.layoutManager as LinearLayoutManager).childCount
+                    totalItem = (recyclerView.layoutManager as LinearLayoutManager).itemCount
+                    scrolledOutItems = (recyclerView.layoutManager as LinearLayoutManager)
+                        .findFirstVisibleItemPosition()
+                    if (!isLoading) {
+                        if ((currentItem + scrolledOutItems) >= totalItem && scrolledOutItems >= 0) {
+                            Log.d("SCROLLED", "scrolled linear")
+                            isLoading = true
+                            progressBar.visibility = View.VISIBLE
+                            getNotes()
+                        }
+                    }
+                }
+            }
+        })
+//        DatabaseService().sync(requireContext())
         return view
     }
 
@@ -172,9 +198,10 @@ class HomeFragment : Fragment(), SearchView.OnCloseListener {
     private fun setValuesForUpdation(position: Int) {
         SharedPref.setUpdateStatus("updateStatus", true)
         SharedPref.updateNotePosition("position", position + 1)
-        SharedPref.addString("title", noteList[position].title)
-        SharedPref.addString("note", noteList[position].content)
-        SharedPref.addString("noteid", noteList[position].noteid)
+        SharedPref.addString(Constants.TITLE, noteList[position].title)
+        SharedPref.addString(Constants.NOTE, noteList[position].content)
+        SharedPref.addString(Constants.NOTEID, noteList[position].noteid)
+        SharedPref.addLong(Constants.REMINDER, noteList[position].reminder)
     }
 
     private fun getUserDetails() {
@@ -184,7 +211,7 @@ class HomeFragment : Fragment(), SearchView.OnCloseListener {
 
     private fun getUserNotes() {
 
-        homeViewModel.readNotesFromDatabase(false, "", requireContext())
+        homeViewModel.readNotesFromDatabase(requireContext())
 
     }
 
@@ -226,7 +253,13 @@ class HomeFragment : Fragment(), SearchView.OnCloseListener {
 
         }
 
+
     }
+    fun getNotes() {
+        Log.d("paginationdbserv", "get notes called")
+        homeViewModel.readNotesFromDatabaseWithPagination(startTime, requireContext())
+    }
+
 
     private fun loadAvatar(userIcon: ImageView?) {
         userIcon?.setImageResource(R.drawable.avatar)
@@ -259,31 +292,23 @@ class HomeFragment : Fragment(), SearchView.OnCloseListener {
             dialog.findViewById<TextView>(R.id.usernametv).text = fullName
         }
         homeViewModel.readNotesFromDatabaseStatus.observe(viewLifecycleOwner) {
-            noteList.clear()
-            tempList.clear()
-            recyclerView.isVisible = false
-            for (i in it) {
-                noteList.add(i)
-            }
-            tempList.addAll(noteList)
-            SharedPref.addNoteSize("noteSize", noteList.size)
 
-            if (SharedPref.get("counter") == "") {
-                recyclerView.adapter = adapter
-                adapter.notifyItemInserted(noteList.size - 1)
-                recyclerView.isVisible = true
-            } else if (SharedPref.get("counter") == "true") {
-                recyclerView.isVisible = false
-                recyclerView.layoutManager = linearLayoutManager
-                linearAdpater.notifyItemInserted(noteList.size - 1)
-                recyclerView.adapter = linearAdpater
-                recyclerView.isVisible = true
-            } else if (SharedPref.get("counter") == "false") {
-                recyclerView.isVisible = false
-                recyclerView.layoutManager = gridLayoutManager
-                adapter.notifyItemInserted(noteList.size - 1)
-                recyclerView.adapter = adapter
-                recyclerView.isVisible = true
+            isLoading = false
+            Log.d("Limited notes", it.size.toString())
+            if (it.size == 0) {
+                progressBar.visibility = View.GONE
+                //isLoading = false
+            }
+            else if (it.size > 1) {
+                startTime = it[it.size-1].modifiedTime
+                for (i in 0 .. it.size - 1 ) {
+                        noteList.add(it[i])
+                        tempList.add(it[i])
+                        Log.d("Limited", startTime)
+                        adapter.notifyItemInserted(tempList.size - 1)
+                        progressBar.visibility = View.GONE
+
+                }
             }
             Log.d("reading notes", "Size of note  list is" + noteList.size)
 
@@ -312,7 +337,7 @@ class HomeFragment : Fragment(), SearchView.OnCloseListener {
     }
 
     private fun loadLabelNotes(i: String) {
-        homeViewModel.readNotesFromDatabase(false, i, requireContext())
+        homeViewModel.readNotesFromDatabase(requireContext())
     }
 
     private fun loadNotesInLayoutType() {
@@ -331,7 +356,7 @@ class HomeFragment : Fragment(), SearchView.OnCloseListener {
             layout.setImageResource(R.drawable.ic_baseline_grid_on_24)
             recyclerView.isVisible = false
             recyclerView.layoutManager = linearLayoutManager
-            recyclerView.adapter = linearAdpater
+            recyclerView.adapter = adapter
             recyclerView.isVisible = true
             SharedPref.addString("counter", "true")
 

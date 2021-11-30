@@ -6,6 +6,7 @@ import android.view.ViewGroup
 import android.widget.Filter
 import android.widget.Filterable
 import android.widget.TextView
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.example.notesapp.R
 import com.example.notesapp.service.roomdb.NoteEntity
@@ -53,10 +54,15 @@ class NotesViewAdapter(
         holder.itemView.apply {
             title.text = filteredNotes[position].title
             note.text = filteredNotes[position].content
-            if(filteredNotes[position].reminder != 0L)
-                reminder.text = Util.getDate(filteredNotes[position].reminder)
+            if(filteredNotes[position].reminder == 0L) {
+                reminder.isVisible = false
+            }
             else
-                reminder.visibility = View.INVISIBLE
+            {
+                reminder.isVisible = true
+                reminder.text = Util.getDate(filteredNotes[position].reminder)
+            }
+
 
         }
 

@@ -1,30 +1,38 @@
 package com.example.notesapp
 
+import android.app.AlarmManager
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.Context
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
+import android.util.Log
 import android.view.MenuItem
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.ActionBarDrawerToggle
+import androidx.core.app.NotificationManagerCompat
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.lifecycle.ViewModelProvider
 import androidx.room.Room
-import com.example.notesapp.service.DatabaseService
 import com.example.notesapp.service.RoomDatabase
+import com.example.notesapp.service.notification.NotificationHelper
 import com.example.notesapp.ui.*
+import com.example.notesapp.utils.Constants
+import com.example.notesapp.utils.Note
 import com.example.notesapp.utils.SharedPref
 import com.example.notesapp.viewmodels.SharedViewModel
 import com.example.notesapp.viewmodels.SharedViewModelFactory
 import com.facebook.FacebookSdk
 import com.facebook.appevents.AppEventsLogger
+import com.google.android.gms.tasks.OnCompleteListener
 import com.google.android.material.navigation.NavigationView
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.messaging.FirebaseMessaging
+import com.google.firebase.messaging.ktx.messaging
 
 class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
 
@@ -52,6 +60,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         val toggle =
             ActionBarDrawerToggle(this, drawerLayout, toolbar, R.string.open, R.string.close)
         drawerLayout.addDrawerListener(toggle)
+
         toggle.isDrawerIndicatorEnabled = true
         toggle.syncState()
         navMenu.setNavigationItemSelectedListener(this)
@@ -62,12 +71,44 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         observeNavigation()
         SharedPref.initSharedPref(this)
         flashFragment = SplashFragment()
-        if (savedInstanceState == null) {
+        val bundle = intent.extras
+        if (savedInstanceState == null && bundle == null) {
             gotoSplashScreen()
         }
         roomDBClass = Room.databaseBuilder(applicationContext, RoomDatabase::class.java, "myDB")
             .fallbackToDestructiveMigration().allowMainThreadQueries().build()
+        NotificationHelper.createNotificationChannel(this,
+            NotificationManagerCompat.IMPORTANCE_DEFAULT, false,
+            "Reminder Note", "shows reminder notes")
+        getFirebaseMessagingToken()
+        subscribeToMessaging()
         SharedPref.addString("start","true")
+        if (bundle != null) {
+            if (bundle.getString("Destination") == "userNote") {
+                val note = bundle.getSerializable("reminderNote") as Note
+                loadReminderNotesData(note)
+            }
+        }
+
+    }
+    private fun loadReminderNotesData(note: Note) {
+        SharedPref.setUpdateStatus("updateStatus", true)
+        SharedPref.addString(Constants.TITLE, note.title)
+        SharedPref.addString(Constants.NOTE, note.note)
+        SharedPref.addString(Constants.NOTEID, note.time)
+        SharedPref.addLong(Constants.REMINDER, note.reminder)
+        gotoAddNotePage()
+    }
+    private fun subscribeToMessaging() {
+        Firebase.messaging.subscribeToTopic("weather")
+            .addOnCompleteListener { task ->
+                var msg = getString(R.string.msg_subscribed)
+                if (!task.isSuccessful) {
+                    msg = getString(R.string.msg_subscribe_failed)
+                }
+                Log.d("firebeasemessage", msg)
+                Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
+            }
     }
 
     private fun observeNavigation() {
@@ -199,7 +240,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         drawerLayout.closeDrawer(GravityCompat.START)
         when (item.itemId) {
             R.id.menuNotes -> {
-                SharedPref.addString("NotesType", "MainNotes")
+                SharedPref.addString(Constants.NOTES_TYPE, "MainNotes")
                 navMenu.getMenu().getItem(0).setChecked(true)
                 sharedViewModel.setGotoHomePageStatus(true)
             }
@@ -207,7 +248,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 sharedViewModel.setGoToAddNotesPageStatus(true)
             }
             R.id.menuReminder -> {
-                SharedPref.addString("NotesType", "Reminder")
+                SharedPref.addString(Constants.NOTES_TYPE, "Reminder")
                 navMenu.getMenu().getItem(1).setChecked(true)
                 sharedViewModel.setGotoHomePageStatus(true)
             }
@@ -221,7 +262,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 sharedViewModel.setGoToDeletedNotesPageStatus(true)
             }
             R.id.menuArchived -> {
-                SharedPref.addString("NotesType", "Archived")
+                SharedPref.addString(Constants.NOTES_TYPE, "Archived")
                 navMenu.getMenu().getItem(5).setChecked(true)
                 sharedViewModel.setGotoHomePageStatus(true)
             }
@@ -255,7 +296,19 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     override fun onStart() {
         super.onStart()
-        SharedPref.addString("NotesType", "MainNotes")
+        SharedPref.addString(Constants.NOTES_TYPE, "MainNotes")
+    }
+
+    fun getFirebaseMessagingToken(){
+        FirebaseMessaging.getInstance().token.addOnCompleteListener(OnCompleteListener { task ->
+            if (!task.isSuccessful) {
+                Log.w("firebasemessaging", "Fetching FCM registration token failed", task.exception)
+                return@OnCompleteListener
+            }
+            val token = task.result
+            Log.d("firebasemessaging", token.toString())
+        })
+
     }
 
 

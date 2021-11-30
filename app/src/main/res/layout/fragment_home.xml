@@ -5,8 +5,7 @@
     android:id="@+id/fragment_home"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.HomeFragment"
-   >
+    tools:context=".ui.HomeFragment">
 
 
     <androidx.recyclerview.widget.RecyclerView
@@ -21,6 +20,16 @@
         app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <ProgressBar
+        android:id="@+id/rvProgressBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="invisible"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/rvNotes" />
+
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/addNotesButton"
