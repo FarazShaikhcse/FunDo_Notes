@@ -8,6 +8,9 @@ import android.view.ViewGroup
 import android.widget.CheckBox
 import androidx.recyclerview.widget.RecyclerView
 import com.example.notesapp.R
+import com.example.notesapp.service.DatabaseService
+import com.example.notesapp.utils.Constants
+import com.example.notesapp.utils.SharedPref
 import com.example.notesapp.viewmodels.AddLabelViewModel
 
 class LabelCBAdapter(
@@ -38,8 +41,12 @@ class LabelCBAdapter(
             }
             Log.d("checkedlabels", labelList.toString())
         }
-
-
+        if( SharedPref.getUpdateStatus(Constants.UPDATE_STATUS) )
+        {
+            if (DatabaseService().checkNoteLabelRelation(labelCB.text.toString(), SharedPref.get(Constants.NOTEID).toString())) {
+                labelCB.isChecked = true
+            }
+        }
     }
 
     override fun getItemCount(): Int {

@@ -28,7 +28,6 @@ class DatabaseService {
     suspend fun readNotes(isDeleted: Boolean, isArchived: Boolean): MutableList<NoteEntity> {
         return withContext(Dispatchers.IO) {
             val roomNoteList = MainActivity.roomDBClass.noteDao.readNotes(
-                SharedPref.get("fuid").toString(),
                 isDeleted, isArchived
             )
 
@@ -199,11 +198,9 @@ class DatabaseService {
     }
 
 
-    suspend fun readNotesWithReminder(): MutableList<NoteEntity>? {
+    suspend fun readNotesWithReminder(): MutableList<NoteEntity> {
         return withContext(Dispatchers.IO) {
-            val roomNoteList = MainActivity.roomDBClass.noteDao.readReminderNotes(
-                SharedPref.get("fuid").toString()
-            )
+            val roomNoteList = MainActivity.roomDBClass.noteDao.readReminderNotes()
 
             roomNoteList
         }
@@ -218,20 +215,9 @@ class DatabaseService {
         }
     }
 
-    suspend fun readReminderNotes(
-        modifiedTime: String,
-        isDeleted: Boolean,
-        isArchived: Boolean
-    ): MutableList<NoteEntity>? {
 
-        return withContext(Dispatchers.IO) {
-
-            val roomNoteList = FireBaseDatabase.readReminderNotes(modifiedTime, isDeleted, isArchived)
-            if (roomNoteList != null) {
-                Log.d("paginationdbserv", roomNoteList.size.toString())
-            }
-            roomNoteList
-        }
+    fun checkNoteLabelRelation(label: String, noteid: String): Boolean{
+        return FireBaseDatabase.checkNoteLabelRelation(label, noteid)
     }
 
 }

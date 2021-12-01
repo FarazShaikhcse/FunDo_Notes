@@ -145,13 +145,13 @@ class AddNoteFragment : Fragment(), DatePickerDialog.OnDateSetListener,
             deleteBtn.isVisible = true
             archivebtn.isVisible = true
 
-            if (SharedPref.get("NotesType").toString() == "Archived")
+            if (SharedPref.get("NotesType").toString() == Constants.ARCHIVED)
                 archivebtn.setImageResource(R.drawable.ic_baseline_unarchive_24)
             else
                 archivebtn.setImageResource(R.drawable.ic_baseline_archive_24)
-            if (SharedPref.getLong("reminder") != 0L) {
+            if (SharedPref.getLong(Constants.REMINDER) != 0L) {
                 reminderTV?.isVisible = true
-                reminderTV?.text = Util.getDate(SharedPref.getLong("reminder"))
+                reminderTV?.text = Util.getDate(SharedPref.getLong(Constants.REMINDER))
             } else
                 reminderTV?.isVisible = false
         }
@@ -178,11 +178,11 @@ class AddNoteFragment : Fragment(), DatePickerDialog.OnDateSetListener,
     }
 
     private fun clearSharedPref() {
-        SharedPref.setUpdateStatus("updateStatus", false)
-        SharedPref.updateNotePosition("position", 0)
+        SharedPref.setUpdateStatus(Constants.UPDATE_STATUS, false)
+        SharedPref.updateNotePosition(Constants.POSITION, 0)
         SharedPref.addString(Constants.TITLE, "")
         SharedPref.addString(Constants.NOTE, "")
-        SharedPref.addString("noteid", "")
+        SharedPref.addString(Constants.NOTEID, "")
         SharedPref.addLong(Constants.REMINDER, 0L)
     }
 
@@ -190,7 +190,8 @@ class AddNoteFragment : Fragment(), DatePickerDialog.OnDateSetListener,
     private fun saveNote() {
         val titleText = notesTitle.text.toString()
         val noteText = notesContent.text.toString()
-        if (SharedPref.getLong(Constants.REMINDER) != 0L && !SharedPref.getUpdateStatus("updateStatus")) {
+        val labelsList = adapter.getSelectedLabels()
+        if (SharedPref.getLong(Constants.REMINDER) != 0L && !SharedPref.getUpdateStatus(Constants.UPDATE_STATUS)) {
             addReminder(SharedPref.getLong(Constants.REMINDER))
         } else if (SharedPref.get(Constants.TITLE)
                 .toString() != "" || SharedPref.get(Constants.NOTE).toString() != ""
@@ -198,18 +199,18 @@ class AddNoteFragment : Fragment(), DatePickerDialog.OnDateSetListener,
             val note = Note(
                 titleText,
                 noteText,
-                SharedPref.get("noteid").toString(),
+                SharedPref.get(Constants.NOTEID).toString(),
                 LocalDateTime.now().toString(),
                 reminder = SharedPref.getLong(Constants.REMINDER)
             )
             addNoteViewModel.updateNotesInDatabase(note, requireContext())
+            addNoteViewModel.linkNotesandLabels(SharedPref.get(Constants.NOTEID).toString(), labelsList, requireContext())
         } else {
             val time = LocalDateTime.now().toString()
             val note = NoteEntity(
                 time, SharedPref.get("fuid").toString(), titleText, noteText,
                 time
             )
-            val labelsList = adapter.getSelectedLabels()
             addNoteViewModel.addNotesToDatabase(note, requireContext())
             addNoteViewModel.linkNotesandLabels(note.noteid, labelsList, requireContext())
         }
@@ -219,7 +220,7 @@ class AddNoteFragment : Fragment(), DatePickerDialog.OnDateSetListener,
     private fun observe() {
         addNoteViewModel.databaseNoteAddedStatus.observe(viewLifecycleOwner) {
             if (it) {
-                SharedPref.addString(Constants.NOTES_TYPE, "MainNotes")
+                SharedPref.addString(Constants.NOTES_TYPE, Constants.MAIN_NOTES)
                 sharedViewModel.setGotoHomePageStatus(true)
             } else {
                 Toast.makeText(requireContext(), "Error in storing notes to DB", Toast.LENGTH_SHORT)
@@ -230,7 +231,7 @@ class AddNoteFragment : Fragment(), DatePickerDialog.OnDateSetListener,
             if (it) {
                 clearSharedPref()
                 Toast.makeText(requireContext(), "updated", Toast.LENGTH_SHORT).show()
-                SharedPref.addString(Constants.NOTES_TYPE, "MainNotes")
+                SharedPref.addString(Constants.NOTES_TYPE, Constants.MAIN_NOTES)
                 sharedViewModel.setGotoHomePageStatus(true)
 
             } else {
@@ -263,7 +264,7 @@ class AddNoteFragment : Fragment(), DatePickerDialog.OnDateSetListener,
             if (it) {
                 clearSharedPref()
                 Toast.makeText(requireContext(), "Archived Notes", Toast.LENGTH_SHORT).show()
-                SharedPref.addString(Constants.NOTES_TYPE, "Archived")
+                SharedPref.addString(Constants.NOTES_TYPE, Constants.ARCHIVED)
                 sharedViewModel.setGotoHomePageStatus(true)
 
             } else {
@@ -278,7 +279,7 @@ class AddNoteFragment : Fragment(), DatePickerDialog.OnDateSetListener,
             if (it) {
                 Toast.makeText(requireContext(), "Unarchived successfully", Toast.LENGTH_SHORT)
                     .show()
-                SharedPref.addString("NotesType", "MainNotes")
+                SharedPref.addString(Constants.NOTES_TYPE, Constants.MAIN_NOTES)
                 sharedViewModel.setGotoHomePageStatus(true)
             }
         }

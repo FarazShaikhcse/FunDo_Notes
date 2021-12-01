@@ -161,7 +161,8 @@ class FireBaseDatabase {
             val db = FirebaseFirestore.getInstance()
             Log.d("FirebaseReference", SharedPref.get("noteid").toString())
             db.collection(Constants.USERS).document(AuthenticationService.checkUser().toString())
-                .collection(Constants.NOTES).document(SharedPref.get(Constants.NOTEID).toString()).get()
+                .collection(Constants.NOTES).document(SharedPref.get(Constants.NOTEID).toString())
+                .get()
                 .addOnSuccessListener { result ->
                     listener(result.reference)
                 }
@@ -497,74 +498,32 @@ class FireBaseDatabase {
             }
         }
 
-        suspend fun readReminderNotes(
-            modifiedTime: String,
-            isDeleted: Boolean,
-            isArchived: Boolean
-        ): MutableList<NoteEntity>? {
-            return suspendCoroutine { cont ->
-                var list = mutableListOf<NoteEntity>()
-                val db = FirebaseFirestore.getInstance()
-
-                if (modifiedTime == "") {
-                    db.collection(Constants.USERS)
-                        .document(AuthenticationService.checkUser().toString())
-                        .collection(Constants.NOTES)
-                        .whereNotEqualTo(Constants.REMINDER, 0)
-                        .orderBy(Constants.REMINDER, Query.Direction.DESCENDING)
-                        .limit(10)
-                        .get().addOnSuccessListener { result ->
-                            for (doc in result) {
-                                val title = doc.get(Constants.TITLE).toString()
-                                val note = doc.get(Constants.NOTE).toString()
-                                val time = doc.get(Constants.TIME).toString()
-                                val modifiedTime1 = doc.get(Constants.MODIFIEDTIME).toString()
-                                val reminder = doc.get(Constants.REMINDER) as Long
-                                val userNote = NoteEntity(
-                                    time, SharedPref.get("fuid").toString(),
-                                    title, note, modifiedTime1, isDeleted, isArchived, reminder
-                                )
-                                list.add(userNote)
-                                dbref = doc
+        fun checkNoteLabelRelation(label: String, noteid: String): Boolean {
+            val db = FirebaseFirestore.getInstance()
+            val uid = AuthenticationService.checkUser().toString()
+            var found = false
+            db.collection(Constants.USERS)
+                .document(uid)
+                .collection(Constants.LABELS)
+                .whereEqualTo(Constants.LABEL_NAME, label)
+                .get()
+                .addOnSuccessListener {
+                    for (doc in it) {
+                        db.collection(Constants.USERS)
+                            .document(uid)
+                            .collection(Constants.NOTES_TABLE_RELN)
+                            .whereEqualTo(Constants.LABEL_ID, doc.id)
+                            .get()
+                            .addOnSuccessListener {
+                                for (entry in it) {
+                                    if (entry.get(Constants.NOTEID).toString() == noteid)
+                                        found = true
+                                }
                             }
-
-                            cont.resumeWith(Result.success(list))
-                        }
-                        .addOnFailureListener { exception ->
-                            Log.w("Firebasedatabase", "Error getting documents.", exception)
-                            cont.resumeWith(Result.failure(exception))
-                        }
-
-                } else {
-                    db.collection(Constants.USERS)
-                        .document(AuthenticationService.checkUser().toString())
-                        .collection(Constants.NOTES)
-                        .whereNotEqualTo(Constants.REMINDER, 0)
-                        .orderBy(Constants.REMINDER, Query.Direction.DESCENDING)
-                        .startAfter(dbref)
-                        .limit(10)
-                        .get().addOnSuccessListener { result ->
-                            for (doc in result) {
-                                val title = doc.get(Constants.TITLE).toString()
-                                val note = doc.get(Constants.NOTE).toString()
-                                val time = doc.get(Constants.TIME).toString()
-                                val modifiedTime2 = doc.get(Constants.MODIFIEDTIME).toString()
-                                val reminder = doc.get(Constants.REMINDER) as Long
-                                val userNote = NoteEntity(
-                                    time, SharedPref.get("fuid").toString(),
-                                    title, note, modifiedTime2, isDeleted, isArchived, reminder
-                                )
-                                list.add(userNote)
-                                dbref = doc
-                            }
-                            cont.resumeWith(Result.success(list))
-                        }
-                        .addOnFailureListener { exception ->
-                            Log.w("Firebasedatabase", "Error getting documents.", exception)
-                            cont.resumeWith(Result.failure(exception))
-                        }
+                    }
                 }
-            }
+
+            return found
         }
     }
 }

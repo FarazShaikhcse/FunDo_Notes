@@ -75,7 +75,7 @@ class HomeFragment : Fragment(), SearchView.OnCloseListener {
     ): View? {
         // Inflate the layout for this fragment
         val view = inflater.inflate(R.layout.fragment_home, container, false)
-        (requireActivity() as AppCompatActivity).supportActionBar?.show()
+        (activity as AppCompatActivity).supportActionBar?.show()
 
         var profilePhoto: Uri? = null
         mainHandler = Handler(Looper.getMainLooper())
@@ -90,31 +90,27 @@ class HomeFragment : Fragment(), SearchView.OnCloseListener {
             )[AddLabelViewModel::class.java]
         homeViewModel =
             ViewModelProvider(requireActivity(), HomeViewModelFactory())[HomeViewModel::class.java]
-        dialog = Util.createDialog(requireContext())
-        userIcon = requireActivity().findViewById(R.id.userProfile)
-        layout = requireActivity().findViewById(R.id.notesLayout)
-        deleteBtn = requireActivity().findViewById(R.id.deleteButton)
-        searchview = requireActivity().findViewById(R.id.searchView)
+        dialog = context?.let { Util.createDialog(it) }!!
+        if (activity != null) {
+            userIcon = requireActivity().findViewById(R.id.userProfile)
+            layout = requireActivity().findViewById(R.id.notesLayout)
+            deleteBtn = requireActivity().findViewById(R.id.deleteButton)
+            searchview = requireActivity().findViewById(R.id.searchView)
+        }
         addNotesButton = view.findViewById(R.id.addNotesButton)
         progressBar = view.findViewById(R.id.rvProgressBar)
         adapter = NotesViewAdapter(tempList)
-        linearLayoutManager = LinearLayoutManager(requireContext())
-        gridLayoutManager =  StaggeredGridLayoutManager(2, LinearLayoutManager.VERTICAL)
+        linearLayoutManager = LinearLayoutManager(context)
+        gridLayoutManager = StaggeredGridLayoutManager(2, LinearLayoutManager.VERTICAL)
+        recyclerView = view.findViewById(R.id.rvNotes)
+        recyclerView.layoutManager = StaggeredGridLayoutManager(2, LinearLayoutManager.VERTICAL)
         adapter.setOnItemClickListner(object : NotesViewAdapter.onItemClickListner {
             override fun onItemClick(position: Int) {
-
                 setValuesForUpdation(position)
-                Toast.makeText(
-                    requireContext(),
-                    "You clicked item ${position + 1}",
-                    Toast.LENGTH_SHORT
-                ).show()
                 sharedViewModel.setGoToAddNotesPageStatus(true)
             }
-
         })
-        recyclerView = view.findViewById(R.id.rvNotes)
-        recyclerView.layoutManager = StaggeredGridLayoutManager( 2, LinearLayoutManager.VERTICAL)
+        searchview.setOnCloseListener(this)
         getImage = registerForActivityResult(
             ActivityResultContracts.GetContent(),
             ActivityResultCallback {
@@ -123,12 +119,11 @@ class HomeFragment : Fragment(), SearchView.OnCloseListener {
                 homeViewModel.uploadProfile(uid, it)
             }
         )
-        searchview.setOnCloseListener(this)
-        Util.loadToolBar(requireActivity(), "homefragment")
+        activity?.let { Util.loadToolBar(it, "homefragment") }
         observe()
         getUserDetails()
 //        getUserNotes()
-        addLabelViewModel.getLabelsFromDatabase(requireContext())
+        context?.let { addLabelViewModel.getLabelsFromDatabase(it) }
         getNotes()
         Util.checkLayout(recyclerView, adapter, layout)
         loadAvatar(userIcon)
@@ -137,13 +132,12 @@ class HomeFragment : Fragment(), SearchView.OnCloseListener {
         searchNotes()
         Log.d("homefragment", "userid" + SharedPref.get("fuid"))
         pagination()
-
 //        DatabaseService().sync(requireContext())
         return view
     }
 
     private fun pagination() {
-        if(SharedPref.get(Constants.NOTES_TYPE).toString() == "MainNotes") {
+        if (SharedPref.get(Constants.NOTES_TYPE).toString() == Constants.MAIN_NOTES) {
             recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
                 override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                     super.onScrolled(recyclerView, dx, dy)
@@ -198,8 +192,8 @@ class HomeFragment : Fragment(), SearchView.OnCloseListener {
     }
 
     private fun setValuesForUpdation(position: Int) {
-        SharedPref.setUpdateStatus("updateStatus", true)
-        SharedPref.updateNotePosition("position", position + 1)
+        SharedPref.setUpdateStatus(Constants.UPDATE_STATUS, true)
+        SharedPref.updateNotePosition(Constants.POSITION, position + 1)
         SharedPref.addString(Constants.TITLE, noteList[position].title)
         SharedPref.addString(Constants.NOTE, noteList[position].content)
         SharedPref.addString(Constants.NOTEID, noteList[position].noteid)
@@ -208,15 +202,8 @@ class HomeFragment : Fragment(), SearchView.OnCloseListener {
 
     private fun getUserDetails() {
         AuthenticationService.checkUser()
-            ?.let { homeViewModel.readUserFromDatabase(it, requireContext()) }
+            ?.let { context?.let { it1 -> homeViewModel.readUserFromDatabase(it, it1) } }
     }
-
-    private fun getUserNotes() {
-
-        homeViewModel.readNotesFromDatabase(requireContext())
-
-    }
-
 
     private fun listeners() {
         userIcon.setOnClickListener {
@@ -250,23 +237,19 @@ class HomeFragment : Fragment(), SearchView.OnCloseListener {
         searchview.setOnSearchClickListener {
             userIcon.isVisible = false
             layout.isVisible = false
-            requireActivity().findViewById<TextView>(R.id.FunDo).isVisible = false
+            activity?.findViewById<TextView>(R.id.FunDo)?.isVisible = false
             searchview.maxWidth = Integer.MAX_VALUE
-
         }
-
-
     }
+
     fun getNotes() {
         Log.d("paginationdbserv", "get notes called")
-        homeViewModel.readNotesFromDatabaseWithPagination(startTime, requireContext())
+        context?.let { homeViewModel.readNotesFromDatabaseWithPagination(startTime, it) }
     }
-
 
     private fun loadAvatar(userIcon: ImageView?) {
         userIcon?.setImageResource(R.drawable.avatar)
     }
-
 
     fun observe() {
         homeViewModel.profilePhotoUploadStatus.observe(viewLifecycleOwner) {
@@ -294,7 +277,7 @@ class HomeFragment : Fragment(), SearchView.OnCloseListener {
             dialog.findViewById<TextView>(R.id.usernametv).text = fullName
         }
         homeViewModel.readNotesFromDatabaseStatus.observe(viewLifecycleOwner) {
-            if(SharedPref.get(Constants.NOTES_TYPE).toString() == "MainNotes") {
+            if (SharedPref.get(Constants.NOTES_TYPE).toString() == Constants.MAIN_NOTES) {
                 isLoading = false
                 Log.d("Limited notes", it.size.toString())
                 if (it.size == 0) {
@@ -307,50 +290,46 @@ class HomeFragment : Fragment(), SearchView.OnCloseListener {
                         Log.d("Limited", startTime)
                         adapter.notifyItemInserted(tempList.size - 1)
                         progressBar.visibility = View.GONE
-
                     }
                 }
-            }
-            else {
-                for (i in 0..it.size - 1) {
+            } else {
+                adapter.notifyItemRangeRemoved(0, tempList.size)
+                tempList.clear()
+                for (i in 0 until it.size) {
                     noteList.add(it[i])
                     tempList.add(it[i])
-                    adapter.notifyItemInserted(tempList.size - 1)
+                    adapter.notifyItemInserted(i)
                     progressBar.visibility = View.GONE
-
                 }
             }
             Log.d("reading notes", "Size of note  list is" + noteList.size)
-
         }
         addLabelViewModel.getLabelStatus.observe(viewLifecycleOwner) {
-
-
-            val navigationView = requireActivity().findViewById<NavigationView>(R.id.myNavMenu)
-            val menu: Menu = navigationView.getMenu()
-            for (i in it) {
-                if ((SharedPref.get(i!!).toString() == "") or (SharedPref.get("start")
-                        .toString() == "true")
-                ) {
-                    val labelmenu = menu.add(i)
-                    labelmenu.setIcon(resources.getDrawable(R.drawable.ic_baseline_label_important_24))
-                    labelmenu.setOnMenuItemClickListener {
-                        Log.d("menuclicked", "clicked" + i)
-                        SharedPref.addString(Constants.NOTES_TYPE, "labelnotes")
-                        SharedPref.addString("selectedLabel", i)
-                        sharedViewModel.setGotoHomePageStatus(true)
-                        return@setOnMenuItemClickListener false
+            if (activity != null) {
+                val navigationView = requireActivity().findViewById<NavigationView>(R.id.myNavMenu)
+                val menu: Menu = navigationView.getMenu()
+                for (i in it) {
+                    if ((SharedPref.get(i!!).toString() == "") or (SharedPref.get("start")
+                            .toString() == "true")
+                    ) {
+                        val menuList = it
+                        val labelmenu = menu.add(i)
+                        labelmenu.setIcon(resources.getDrawable(R.drawable.ic_baseline_label_important_24))
+                        labelmenu.setOnMenuItemClickListener {
+                            Log.d("menuclicked", "clicked" + i)
+                            SharedPref.addString(Constants.NOTES_TYPE, Constants.LABEL_NOTES)
+                            SharedPref.addString("selectedLabel", i)
+                            menu.getItem(menuList.indexOf(i) + 6).isChecked = true
+                            sharedViewModel.setGotoHomePageStatus(true)
+                            return@setOnMenuItemClickListener false
+                        }
+                        SharedPref.addString(i.toString(), "updated")
                     }
-                    SharedPref.addString(i.toString(), "updated")
                 }
+                SharedPref.addString("start", "false")
             }
-            SharedPref.addString("start", "false")
         }
 
-    }
-
-    private fun loadLabelNotes(i: String) {
-        homeViewModel.readNotesFromDatabase(requireContext())
     }
 
     private fun loadNotesInLayoutType() {
@@ -387,14 +366,14 @@ class HomeFragment : Fragment(), SearchView.OnCloseListener {
     override fun onClose(): Boolean {
         userIcon.isVisible = true
         layout.isVisible = true
-        requireActivity().findViewById<TextView>(R.id.FunDo).isVisible = true
+        activity?.findViewById<TextView>(R.id.FunDo)?.isVisible = true
         return false
     }
 
     private val syncNotes = object : Runnable {
         @RequiresApi(Build.VERSION_CODES.O)
         override fun run() {
-            DatabaseService().sync(requireContext())
+            DatabaseService().sync(context)
             mainHandler.postDelayed(this, 120000)
         }
     }
@@ -403,12 +382,9 @@ class HomeFragment : Fragment(), SearchView.OnCloseListener {
         super.onPause()
         mainHandler.removeCallbacks(syncNotes)
     }
-
     override fun onResume() {
         super.onResume()
 //        addLabelViewModel.getLabelsFromDatabase(requireContext())
         mainHandler.post(syncNotes)
-
     }
-
 }

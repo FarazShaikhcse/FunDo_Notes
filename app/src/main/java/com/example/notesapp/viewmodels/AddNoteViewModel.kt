@@ -12,6 +12,7 @@ import com.example.notesapp.service.DatabaseService
 import com.example.notesapp.service.FireBaseDatabase
 import com.example.notesapp.utils.Note
 import com.example.notesapp.service.roomdb.NoteEntity
+import com.example.notesapp.utils.Constants
 import com.example.notesapp.utils.SharedPref
 import com.example.notesapp.utils.Util
 import kotlinx.coroutines.launch
@@ -61,7 +62,7 @@ class AddNoteViewModel : ViewModel() {
         }
         _databaseNoteDeletedStatus.value = MainActivity.roomDBClass.noteDao.tempDeleteNote(
             SharedPref.get("fuid").toString(),
-            SharedPref.get("noteid").toString(), true, false, time
+            SharedPref.get(Constants.NOTEID).toString(), true, false, time
         ) > 0
 
     }
@@ -81,7 +82,7 @@ class AddNoteViewModel : ViewModel() {
         if (titleText.isNotEmpty() && noteText.isNotEmpty()) {
             _databaseNoteArchivedStatus.value = MainActivity.roomDBClass.noteDao.archiveNotes(
                 SharedPref.get("fuid").toString(),
-                SharedPref.get("noteid").toString(), isArchived, time
+                SharedPref.get(Constants.NOTEID).toString(), isArchived, time
             ) > 0
 
         }

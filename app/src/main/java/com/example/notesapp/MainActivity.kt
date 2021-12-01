@@ -188,7 +188,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
     }
 
-    private fun gotoHomePage() {
+    fun gotoHomePage() {
         supportFragmentManager.beginTransaction().apply {
             replace(R.id.flFragment, HomeFragment())
             commit()
@@ -218,17 +218,17 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         drawerLayout.closeDrawer(GravityCompat.START)
         when (item.itemId) {
             R.id.menuNotes -> {
-                SharedPref.addString(Constants.NOTES_TYPE, "MainNotes")
-                navMenu.getMenu().getItem(0).setChecked(true)
-                sharedViewModel.setGotoHomePageStatus(true)
+                SharedPref.addString(Constants.NOTES_TYPE, Constants.MAIN_NOTES)
+                navMenu.getMenu().getItem(0).isChecked = true
+                gotoHomePage()
             }
             R.id.menuAddNotes -> {
                 sharedViewModel.setGoToAddNotesPageStatus(true)
             }
             R.id.menuReminder -> {
-                SharedPref.addString(Constants.NOTES_TYPE, "Reminder")
-                navMenu.getMenu().getItem(1).setChecked(true)
-                sharedViewModel.setGotoHomePageStatus(true)
+                SharedPref.addString(Constants.NOTES_TYPE, Constants.REMINDER)
+                navMenu.getMenu().getItem(1).isChecked = true
+                gotoHomePage()
             }
             R.id.menuLabel -> {
                 sharedViewModel.setGoToAddLabelPageStatus(true)
@@ -240,9 +240,9 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 sharedViewModel.setGoToDeletedNotesPageStatus(true)
             }
             R.id.menuArchived -> {
-                SharedPref.addString(Constants.NOTES_TYPE, "Archived")
-                navMenu.getMenu().getItem(5).setChecked(true)
-                sharedViewModel.setGotoHomePageStatus(true)
+                SharedPref.addString(Constants.NOTES_TYPE, Constants.ARCHIVED)
+                navMenu.getMenu().getItem(5).isChecked = true
+                gotoHomePage()
             }
 
         }
@@ -274,7 +274,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     override fun onStart() {
         super.onStart()
-        SharedPref.addString(Constants.NOTES_TYPE, "MainNotes")
+        SharedPref.addString(Constants.NOTES_TYPE, Constants.MAIN_NOTES)
         SharedPref.addString("start", "true")
     }
     fun getFirebaseMessagingToken(){
