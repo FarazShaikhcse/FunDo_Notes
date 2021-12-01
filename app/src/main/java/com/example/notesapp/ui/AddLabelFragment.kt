@@ -1,26 +1,27 @@
 package com.example.notesapp.ui
 
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.*
+import android.widget.EditText
+import android.widget.ImageView
+import android.widget.TextView
 import androidx.appcompat.widget.SearchView
 import androidx.appcompat.widget.Toolbar
 import androidx.core.view.isVisible
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.example.notesapp.R
+import com.example.notesapp.adapter.LabelAdapter
 import com.example.notesapp.service.roomdb.LabelEntity
 import com.example.notesapp.viewmodels.AddLabelViewModel
 import com.example.notesapp.viewmodels.AddLabelViewModelFactory
 import com.example.notesapp.viewmodels.SharedViewModel
 import com.example.notesapp.viewmodels.SharedViewModelFactory
 import com.google.android.material.imageview.ShapeableImageView
-
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import com.example.notesapp.adapter.LabelAdapter
 
 
 class AddLabelFragment : Fragment() {
@@ -93,7 +94,6 @@ class AddLabelFragment : Fragment() {
         loadToolBar()
         return view
     }
-
 
     private fun loadToolBar() {
         toolbar = requireActivity().findViewById(R.id.myToolbar)

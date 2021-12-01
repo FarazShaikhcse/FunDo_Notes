@@ -7,8 +7,6 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
-import androidx.fragment.app.Fragment
-
 import android.view.*
 import android.widget.*
 import androidx.activity.result.ActivityResultCallback
@@ -18,6 +16,7 @@ import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
 import androidx.core.view.isVisible
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -129,6 +128,7 @@ class HomeFragment : Fragment(), SearchView.OnCloseListener {
         observe()
         getUserDetails()
 //        getUserNotes()
+        addLabelViewModel.getLabelsFromDatabase(requireContext())
         getNotes()
         Util.checkLayout(recyclerView, adapter, layout)
         loadAvatar(userIcon)
@@ -136,44 +136,51 @@ class HomeFragment : Fragment(), SearchView.OnCloseListener {
         listeners()
         searchNotes()
         Log.d("homefragment", "userid" + SharedPref.get("fuid"))
-        recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
-            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                super.onScrolled(recyclerView, dx, dy)
-                Log.d("paginationdbserv", "scroll notes called")
-                if (SharedPref.get("counter") == "" || SharedPref.get("counter") == "false") {
-                    currentItem = (recyclerView.layoutManager as StaggeredGridLayoutManager).childCount
-                    totalItem = (recyclerView.layoutManager as StaggeredGridLayoutManager).itemCount
-                    scrolledOutItems = (recyclerView.layoutManager as StaggeredGridLayoutManager)
-                        .findFirstVisibleItemPositions(null)[0];
-                    if (!isLoading) {
-                        if ((currentItem + scrolledOutItems) >= totalItem && scrolledOutItems >= 0) {
-                            isLoading = true
-                            progressBar.visibility = View.VISIBLE
-                            getNotes()
-                        }
-                    }
-                }
-                else {
-                    currentItem = (recyclerView.layoutManager as LinearLayoutManager).childCount
-                    totalItem = (recyclerView.layoutManager as LinearLayoutManager).itemCount
-                    scrolledOutItems = (recyclerView.layoutManager as LinearLayoutManager)
-                        .findFirstVisibleItemPosition()
-                    if (!isLoading) {
-                        if ((currentItem + scrolledOutItems) >= totalItem && scrolledOutItems >= 0) {
-                            Log.d("SCROLLED", "scrolled linear")
-                            isLoading = true
-                            progressBar.visibility = View.VISIBLE
-                            getNotes()
-                        }
-                    }
-                }
-            }
-        })
+        pagination()
+
 //        DatabaseService().sync(requireContext())
         return view
     }
 
-
+    private fun pagination() {
+        if(SharedPref.get(Constants.NOTES_TYPE).toString() == "MainNotes") {
+            recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+                override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                    super.onScrolled(recyclerView, dx, dy)
+                    Log.d("paginationdbserv", "scroll notes called")
+                    if (SharedPref.get("counter") == "" || SharedPref.get("counter") == "false") {
+                        currentItem =
+                            (recyclerView.layoutManager as StaggeredGridLayoutManager).childCount
+                        totalItem =
+                            (recyclerView.layoutManager as StaggeredGridLayoutManager).itemCount
+                        scrolledOutItems =
+                            (recyclerView.layoutManager as StaggeredGridLayoutManager)
+                                .findFirstVisibleItemPositions(null)[0];
+                        if (!isLoading) {
+                            if ((currentItem + scrolledOutItems) >= totalItem && scrolledOutItems >= 0) {
+                                isLoading = true
+                                progressBar.visibility = View.VISIBLE
+                                getNotes()
+                            }
+                        }
+                    } else {
+                        currentItem = (recyclerView.layoutManager as LinearLayoutManager).childCount
+                        totalItem = (recyclerView.layoutManager as LinearLayoutManager).itemCount
+                        scrolledOutItems = (recyclerView.layoutManager as LinearLayoutManager)
+                            .findFirstVisibleItemPosition()
+                        if (!isLoading) {
+                            if ((currentItem + scrolledOutItems) >= totalItem && scrolledOutItems >= 0) {
+                                Log.d("SCROLLED", "scrolled linear")
+                                isLoading = true
+                                progressBar.visibility = View.VISIBLE
+                                getNotes()
+                            }
+                        }
+                    }
+                }
+            })
+        }
+    }
 
 
     private fun searchNotes() {
@@ -287,21 +294,29 @@ class HomeFragment : Fragment(), SearchView.OnCloseListener {
             dialog.findViewById<TextView>(R.id.usernametv).text = fullName
         }
         homeViewModel.readNotesFromDatabaseStatus.observe(viewLifecycleOwner) {
-
-            isLoading = false
-            Log.d("Limited notes", it.size.toString())
-            if (it.size == 0) {
-                progressBar.visibility = View.GONE
-                //isLoading = false
-            }
-            else if (it.size > 1) {
-                startTime = it[it.size-1].modifiedTime
-                for (i in 0 .. it.size - 1 ) {
+            if(SharedPref.get(Constants.NOTES_TYPE).toString() == "MainNotes") {
+                isLoading = false
+                Log.d("Limited notes", it.size.toString())
+                if (it.size == 0) {
+                    progressBar.visibility = View.GONE
+                } else if (it.size > 1) {
+                    startTime = it[it.size - 1].modifiedTime
+                    for (i in 0..it.size - 1) {
                         noteList.add(it[i])
                         tempList.add(it[i])
                         Log.d("Limited", startTime)
                         adapter.notifyItemInserted(tempList.size - 1)
                         progressBar.visibility = View.GONE
+
+                    }
+                }
+            }
+            else {
+                for (i in 0..it.size - 1) {
+                    noteList.add(it[i])
+                    tempList.add(it[i])
+                    adapter.notifyItemInserted(tempList.size - 1)
+                    progressBar.visibility = View.GONE
 
                 }
             }
@@ -321,6 +336,9 @@ class HomeFragment : Fragment(), SearchView.OnCloseListener {
                     labelmenu.setIcon(resources.getDrawable(R.drawable.ic_baseline_label_important_24))
                     labelmenu.setOnMenuItemClickListener {
                         Log.d("menuclicked", "clicked" + i)
+                        SharedPref.addString(Constants.NOTES_TYPE, "labelnotes")
+                        SharedPref.addString("selectedLabel", i)
+                        sharedViewModel.setGotoHomePageStatus(true)
                         return@setOnMenuItemClickListener false
                     }
                     SharedPref.addString(i.toString(), "updated")
@@ -388,7 +406,7 @@ class HomeFragment : Fragment(), SearchView.OnCloseListener {
 
     override fun onResume() {
         super.onResume()
-        addLabelViewModel.getLabelsFromDatabase(requireContext())
+//        addLabelViewModel.getLabelsFromDatabase(requireContext())
         mainHandler.post(syncNotes)
 
     }

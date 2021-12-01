@@ -14,7 +14,10 @@ import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.json.JSONObject
+import java.util.concurrent.ConcurrentNavigableMap
 import kotlin.coroutines.suspendCoroutine
 
 
@@ -158,7 +161,7 @@ class FireBaseDatabase {
             val db = FirebaseFirestore.getInstance()
             Log.d("FirebaseReference", SharedPref.get("noteid").toString())
             db.collection(Constants.USERS).document(AuthenticationService.checkUser().toString())
-                .collection(Constants.NOTES).document(SharedPref.get("noteid").toString()).get()
+                .collection(Constants.NOTES).document(SharedPref.get(Constants.NOTEID).toString()).get()
                 .addOnSuccessListener { result ->
                     listener(result.reference)
                 }
@@ -170,22 +173,21 @@ class FireBaseDatabase {
         }
 
         @RequiresApi(Build.VERSION_CODES.O)
-        fun updateNotesinDatabase(isDeleted: Boolean, note: Note, listener: (Boolean) -> Unit) {
-            val updateData = hashMapOf(
-                Constants.MODIFIEDTIME to note.modifiedTime,
-                Constants.NOTE to note.note,
-                Constants.TITLE to note.title
-            )
-            getSelectedNotesDocReference(isDeleted) {
-                if (it != null) {
-                    it.update(updateData as Map<String, Any>).addOnSuccessListener {
-                        listener(true)
-                    }.addOnFailureListener {
-                        listener(false)
+        suspend fun updateNotesinDatabase(isDeleted: Boolean, note: Note): Boolean {
+            return suspendCoroutine { cont ->
+                val updateData = hashMapOf(
+                    Constants.MODIFIEDTIME to note.modifiedTime,
+                    Constants.NOTE to note.note,
+                    Constants.TITLE to note.title
+                )
+                getSelectedNotesDocReference(isDeleted) {
+                    it?.update(updateData as Map<String, Any>)?.addOnSuccessListener {
+                        cont.resumeWith(Result.success(true))
+                    }?.addOnFailureListener {
+                        cont.resumeWith(Result.failure(it))
                         Log.w("Firebasedatabase", "update notes Error getting document" + it)
                     }
-                } else
-                    listener(false)
+                }
             }
         }
 
@@ -320,7 +322,7 @@ class FireBaseDatabase {
                     .collection(Constants.LABELS)
                     .get().addOnSuccessListener {
                         for (doc in it) {
-                            val labelname = doc.get("labelname")
+                            val labelname = doc.get(Constants.LABEL_NAME)
                             list.add(labelname.toString())
                         }
                         cont.resumeWith(Result.success(list))
@@ -337,7 +339,7 @@ class FireBaseDatabase {
                 val db = FirebaseFirestore.getInstance()
                 db.collection(Constants.USERS)
                     .document(AuthenticationService.checkUser().toString())
-                    .collection(Constants.LABELS).whereEqualTo("labelname", label).get()
+                    .collection(Constants.LABELS).whereEqualTo(Constants.LABEL_NAME, label).get()
                     .addOnSuccessListener {
                         it.documents[0].reference.delete()
                             .addOnSuccessListener {
@@ -361,9 +363,9 @@ class FireBaseDatabase {
                 val db = FirebaseFirestore.getInstance()
                 db.collection(Constants.USERS)
                     .document(AuthenticationService.checkUser().toString())
-                    .collection(Constants.LABELS).whereEqualTo("labelname", label).get()
+                    .collection(Constants.LABELS).whereEqualTo(Constants.LABEL_NAME, label).get()
                     .addOnSuccessListener {
-                        it.documents[0].reference.update("labelname", newLabel)
+                        it.documents[0].reference.update(Constants.LABEL_NAME, newLabel)
                             .addOnSuccessListener {
                                 cont.resumeWith(Result.success(true))
                             }
@@ -379,16 +381,32 @@ class FireBaseDatabase {
         }
 
 
-        fun linkNotesandLabels(noteid: String, labelsList: MutableList<String>) {
-            val db = FirebaseFirestore.getInstance()
-            for (label in labelsList) {
-                val data = hashMapOf(
-                    "labelname" to label,
-                    "noteid" to noteid
-                )
-                db.collection(Constants.USERS)
-                    .document(AuthenticationService.checkUser().toString())
-                    .collection("noteLabelReln").document().set(data)
+        suspend fun linkNotesandLabels(noteid: String, labelsList: MutableList<String>) {
+            withContext(Dispatchers.IO) {
+                val db = FirebaseFirestore.getInstance()
+                for (label in labelsList) {
+                    var labelid = ""
+                    db.collection(Constants.USERS)
+                        .document(AuthenticationService.checkUser().toString())
+                        .collection(Constants.LABELS)
+                        .whereEqualTo(Constants.LABEL_NAME, label)
+                        .get()
+                        .addOnSuccessListener {
+                            for (doc in it) {
+                                val data = hashMapOf(
+                                    Constants.LABEL_ID to doc.id,
+                                    Constants.NOTEID to noteid
+                                )
+                                db.collection(Constants.USERS)
+                                    .document(AuthenticationService.checkUser().toString())
+                                    .collection(Constants.NOTES_TABLE_RELN).document().set(data)
+                            }
+                            Log.d("labelidfetch", "success" + labelid)
+                        }
+                        .addOnFailureListener {
+                            Log.d("labelidfetch", "failed" + it)
+                        }
+                }
             }
         }
 
@@ -403,38 +421,38 @@ class FireBaseDatabase {
             return documentRef
         }
 
-        fun getNotesWithLabel(label: String): MutableList<NoteEntity> {
-            val db = FirebaseFirestore.getInstance()
-            val noteList: MutableList<NoteEntity> = ArrayList()
-            val noteidlist: MutableList<String> = ArrayList()
-            val uid = AuthenticationService.checkUser().toString()
-            db.collection(Constants.USERS).document(uid)
-                .collection("noteLabelReln").get().addOnSuccessListener {
-                    for (i in it) {
-                        if (i.get("labelname").toString() == label) {
-                            noteidlist.add(i.get("noteid").toString())
+        suspend fun getNotesWithLabel(label: String): MutableList<String> {
+            return suspendCoroutine { cont ->
+                val db = FirebaseFirestore.getInstance()
+                val noteList: MutableList<NoteEntity> = ArrayList()
+                val noteidlist: MutableList<String> = ArrayList()
+                val uid = AuthenticationService.checkUser().toString()
+                db.collection(Constants.USERS)
+                    .document(uid)
+                    .collection(Constants.LABELS)
+                    .whereEqualTo(Constants.LABEL_NAME, label)
+                    .get()
+                    .addOnSuccessListener {
+                        for (doc in it) {
+                            db.collection(Constants.USERS)
+                                .document(uid)
+                                .collection(Constants.NOTES_TABLE_RELN)
+                                .whereEqualTo(Constants.LABEL_ID, doc.id)
+                                .get()
+                                .addOnSuccessListener {
+                                    for (entry in it) {
+                                        noteidlist.add(entry.get(Constants.NOTEID).toString())
+                                    }
+                                    cont.resumeWith(Result.success(noteidlist))
+                                }
                         }
                     }
-                }
-            db.collection(Constants.USERS).document(uid)
-                .collection(Constants.NOTES).whereEqualTo(Constants.DELETED, false)
-                .get().addOnSuccessListener {
-                    for (i in it) {
-                        if (i.get(Constants.TIME).toString() in noteidlist) {
-                            noteList.add(
-                                NoteEntity(
-                                    i.getString(Constants.TIME)!!,
-                                    uid,
-                                    i.getString(Constants.TITLE)!!,
-                                    i.getString(Constants.NOTE)!!,
-                                    i.getString(Constants.MODIFIEDTIME)!!,
-                                    false
-                                )
-                            )
-                        }
+                    .addOnFailureListener {
+                        Log.d("labelidfetch", "failed" + it)
+                        cont.resumeWith(Result.failure(it))
                     }
-                }
-            return noteList
+                Log.d("labelidfetch", "success" + noteidlist.size)
+            }
         }
 
         fun archiveNotesInDatabase(isArchived: Boolean, time: String) {

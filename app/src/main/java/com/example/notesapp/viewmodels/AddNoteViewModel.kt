@@ -39,17 +39,17 @@ class AddNoteViewModel : ViewModel() {
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun updateNotesInDatabase(note: Note, context: Context) {
-
-        if (Util.checkInternet(context)) {
-            FireBaseDatabase.updateNotesinDatabase(false, note) {
+        viewModelScope.launch {
+            if (Util.checkInternet(context)) {
+                FireBaseDatabase.updateNotesinDatabase(false, note)
             }
+            val titleText = note.title
+            val noteText = note.note
+            _databaseNoteUpdatedStatus.value = MainActivity.roomDBClass.noteDao.updateNote(
+                titleText, noteText,
+                SharedPref.get("noteid").toString(), note.modifiedTime
+            ) > 0
         }
-        val titleText = note.title
-        val noteText = note.note
-        _databaseNoteUpdatedStatus.value = MainActivity.roomDBClass.noteDao.updateNote(
-            titleText, noteText,
-            SharedPref.get("noteid").toString(), note.modifiedTime
-        ) > 0
     }
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
@@ -67,7 +67,9 @@ class AddNoteViewModel : ViewModel() {
     }
 
     fun linkNotesandLabels(noteid: String, labelsList: MutableList<String>, context: Context) {
-        FireBaseDatabase.linkNotesandLabels(noteid, labelsList)
+        viewModelScope.launch {
+            FireBaseDatabase.linkNotesandLabels(noteid, labelsList)
+        }
     }
 
     fun archiveNotes(titleText: String, noteText: String, isArchived: Boolean, context: Context) {

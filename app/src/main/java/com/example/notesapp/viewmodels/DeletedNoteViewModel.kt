@@ -31,7 +31,7 @@ class DeletedNoteViewModel : ViewModel() {
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     fun readNotesFromDatabase(isDeleted: Boolean, context: Context) {
         viewModelScope.launch {
-            val noteList = DatabaseService().readNotes(true, false, context)
+            val noteList = DatabaseService().readNotes(true, false)
             _readNotesFromDatabaseStatus.value = noteList
         }
     }

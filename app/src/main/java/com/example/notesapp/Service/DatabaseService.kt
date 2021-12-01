@@ -25,7 +25,7 @@ class DatabaseService {
     }
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-    suspend fun readNotes(isDeleted: Boolean, isArchived: Boolean, context: Context): MutableList<NoteEntity> {
+    suspend fun readNotes(isDeleted: Boolean, isArchived: Boolean): MutableList<NoteEntity> {
         return withContext(Dispatchers.IO) {
             val roomNoteList = MainActivity.roomDBClass.noteDao.readNotes(
                 SharedPref.get("fuid").toString(),
@@ -198,13 +198,6 @@ class DatabaseService {
         }
     }
 
-    suspend fun readNotes(isDeleted: Boolean, label: String, context1: Context): MutableList<NoteEntity> {
-        return withContext(Dispatchers.IO) {
-            val roomNoteList = FireBaseDatabase.getNotesWithLabel(label)
-
-            roomNoteList
-        }
-    }
 
     suspend fun readNotesWithReminder(): MutableList<NoteEntity>? {
         return withContext(Dispatchers.IO) {

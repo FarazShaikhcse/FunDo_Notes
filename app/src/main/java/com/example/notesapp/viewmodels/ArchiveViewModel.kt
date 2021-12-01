@@ -30,7 +30,7 @@ class ArchiveViewModel: ViewModel() {
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     fun readNotesFromDatabase( context: Context) {
         viewModelScope.launch {
-            val noteList = DatabaseService().readNotes(false, true, context)
+            val noteList = DatabaseService().readNotes(false, true)
             _readNotesFromDatabaseStatus.value = noteList
         }
     }

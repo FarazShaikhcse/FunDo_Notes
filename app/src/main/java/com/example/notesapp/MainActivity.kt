@@ -1,18 +1,13 @@
 package com.example.notesapp
 
-import android.app.AlarmManager
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.content.Context
-import android.os.Build
-import androidx.appcompat.app.AppCompatActivity
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.MenuItem
 import android.widget.ImageView
 import android.widget.Toast
-import androidx.annotation.RequiresApi
 import androidx.appcompat.app.ActionBarDrawerToggle
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
@@ -20,7 +15,6 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.room.Room
 import com.example.notesapp.service.RoomDatabase
 import com.example.notesapp.service.notification.NotificationHelper
-import com.example.notesapp.service.pushnotfication.FbMessagingService
 import com.example.notesapp.ui.*
 import com.example.notesapp.utils.Constants
 import com.example.notesapp.utils.Note
@@ -33,7 +27,6 @@ import com.google.android.gms.tasks.OnCompleteListener
 import com.google.android.material.navigation.NavigationView
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.messaging.FirebaseMessaging
-import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.ktx.messaging
 
 class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
@@ -85,13 +78,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         getFirebaseMessagingToken()
         subscribeToMessaging("news")
         SharedPref.addString("start","true")
-        if (bundle != null) {
-            if (bundle.getString("Destination") == "userNote") {
-                val note = bundle.getSerializable("reminderNote") as Note
-                loadReminderNotesData(note)
-            }
-        }
-
     }
     private fun loadReminderNotesData(note: Note) {
         SharedPref.setUpdateStatus("updateStatus", true)
@@ -289,6 +275,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     override fun onStart() {
         super.onStart()
         SharedPref.addString(Constants.NOTES_TYPE, "MainNotes")
+        SharedPref.addString("start", "true")
     }
     fun getFirebaseMessagingToken(){
         FirebaseMessaging.getInstance().token.addOnCompleteListener(OnCompleteListener { task ->
@@ -313,9 +300,17 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             }
     }
 
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        val bundle = intent?.extras
+        if (bundle != null) {
+            if (bundle.getString("Destination") == "userNote") {
+                val note = bundle.getSerializable("reminderNote") as Note
+                loadReminderNotesData(note)
+            }
+        }
 
-
-
+    }
 }
 
 
