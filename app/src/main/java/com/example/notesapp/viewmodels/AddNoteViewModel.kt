@@ -99,4 +99,6 @@ class AddNoteViewModel : ViewModel() {
         ) > 0
     }
 
+
+
 }

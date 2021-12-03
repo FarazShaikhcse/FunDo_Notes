@@ -46,6 +46,7 @@ class LabelAdapter(
         }
         delete.setOnClickListener {
             addLabelViewModel.deleteLabelFromDB(labels[position]!!, context)
+            addLabelViewModel.deleteLabelRelationsFromDB(labels[position]!!, context)
         }
 
         update.setOnClickListener {

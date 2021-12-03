@@ -19,7 +19,7 @@ object Constants {
     const val EMAIL = "email"
     const val AGE = "age"
     const val NOTES_TYPE = "NotesType"
-    const val NOTES_TABLE_RELN = "noteLabelReln"
+    const val NOTES_LABLE_RELN = "noteLabelReln"
     const val LABEL_NAME = "labelname"
     const val MAIN_NOTES = "MainNotes"
     const val POSITION = "position"

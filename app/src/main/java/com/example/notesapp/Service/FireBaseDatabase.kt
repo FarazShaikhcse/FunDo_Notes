@@ -17,7 +17,6 @@ import com.google.firebase.firestore.Query
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
-import java.util.concurrent.ConcurrentNavigableMap
 import kotlin.coroutines.suspendCoroutine
 
 
@@ -381,7 +380,6 @@ class FireBaseDatabase {
             }
         }
 
-
         suspend fun linkNotesandLabels(noteid: String, labelsList: MutableList<String>) {
             withContext(Dispatchers.IO) {
                 val db = FirebaseFirestore.getInstance()
@@ -400,7 +398,7 @@ class FireBaseDatabase {
                                 )
                                 db.collection(Constants.USERS)
                                     .document(AuthenticationService.checkUser().toString())
-                                    .collection(Constants.NOTES_TABLE_RELN).document().set(data)
+                                    .collection(Constants.NOTES_LABLE_RELN).document().set(data)
                             }
                             Log.d("labelidfetch", "success" + labelid)
                         }
@@ -437,7 +435,7 @@ class FireBaseDatabase {
                         for (doc in it) {
                             db.collection(Constants.USERS)
                                 .document(uid)
-                                .collection(Constants.NOTES_TABLE_RELN)
+                                .collection(Constants.NOTES_LABLE_RELN)
                                 .whereEqualTo(Constants.LABEL_ID, doc.id)
                                 .get()
                                 .addOnSuccessListener {
@@ -498,32 +496,72 @@ class FireBaseDatabase {
             }
         }
 
-        fun checkNoteLabelRelation(label: String, noteid: String): Boolean {
-            val db = FirebaseFirestore.getInstance()
-            val uid = AuthenticationService.checkUser().toString()
-            var found = false
-            db.collection(Constants.USERS)
-                .document(uid)
-                .collection(Constants.LABELS)
-                .whereEqualTo(Constants.LABEL_NAME, label)
-                .get()
-                .addOnSuccessListener {
-                    for (doc in it) {
-                        db.collection(Constants.USERS)
-                            .document(uid)
-                            .collection(Constants.NOTES_TABLE_RELN)
-                            .whereEqualTo(Constants.LABEL_ID, doc.id)
-                            .get()
-                            .addOnSuccessListener {
-                                for (entry in it) {
-                                    if (entry.get(Constants.NOTEID).toString() == noteid)
-                                        found = true
+        suspend fun checkNoteLabelRelation(label: String, noteid: String): Boolean {
+            return suspendCoroutine { cont ->
+                val db = FirebaseFirestore.getInstance()
+                val uid = AuthenticationService.checkUser().toString()
+                var found = false
+                db.collection(Constants.USERS)
+                    .document(uid)
+                    .collection(Constants.LABELS)
+                    .whereEqualTo(Constants.LABEL_NAME, label)
+                    .get()
+                    .addOnSuccessListener {
+                        for (doc in it) {
+                            db.collection(Constants.USERS)
+                                .document(uid)
+                                .collection(Constants.NOTES_LABLE_RELN)
+                                .whereEqualTo(Constants.LABEL_ID, doc.id)
+                                .whereEqualTo(Constants.NOTEID, noteid)
+                                .get()
+                                .addOnSuccessListener {
+                                    cont.resumeWith(Result.success(true))
                                 }
-                            }
+                                .addOnFailureListener {
+                                    cont.resumeWith(Result.failure(it))
+                                }
+                        }
                     }
-                }
+                    .addOnFailureListener {
+                        cont.resumeWith(Result.failure(it))
+                    }
 
-            return found
+                Log.d("relationcheckstatus", found.toString())
+            }
+
+        }
+
+        suspend fun deleteLabelRelationsFromDB(label: String): Boolean {
+            return suspendCoroutine { cont ->
+                val db = FirebaseFirestore.getInstance()
+                val uid = AuthenticationService.checkUser().toString()
+                db.collection(Constants.USERS)
+                    .document(uid)
+                    .collection(Constants.LABELS)
+                    .whereEqualTo(Constants.LABEL_NAME, label)
+                    .get()
+                    .addOnSuccessListener {
+                        for (doc in it) {
+                            db.collection(Constants.USERS)
+                                .document(uid)
+                                .collection(Constants.NOTES_LABLE_RELN)
+                                .whereEqualTo(Constants.LABEL_ID, doc.id)
+                                .get()
+                                .addOnSuccessListener {
+                                    for (doc in it) {
+                                        doc.reference.delete()
+                                    }
+                                    cont.resumeWith(Result.success(true))
+                                }
+                                .addOnFailureListener {
+                                    cont.resumeWith(Result.failure(it))
+                                }
+                        }
+                    }
+                    .addOnFailureListener {
+                        cont.resumeWith(Result.failure(it))
+                    }
+            }
         }
     }
 }

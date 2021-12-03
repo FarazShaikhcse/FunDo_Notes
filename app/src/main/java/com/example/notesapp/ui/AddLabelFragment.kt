@@ -81,7 +81,6 @@ class AddLabelFragment : Fragment() {
             if (it) {
                 addLabelViewModel.getLabelsFromDatabase(requireContext())
                 adapter.notifyDataSetChanged()
-
             }
         }
         addLabelViewModel.labelEditedinDbStatus.observe(viewLifecycleOwner) {

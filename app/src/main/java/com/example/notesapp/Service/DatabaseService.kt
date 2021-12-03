@@ -216,8 +216,16 @@ class DatabaseService {
     }
 
 
-    fun checkNoteLabelRelation(label: String, noteid: String): Boolean{
-        return FireBaseDatabase.checkNoteLabelRelation(label, noteid)
+    suspend fun checkNoteLabelRelation(label: String, noteid: String): Boolean{
+        return withContext(Dispatchers.IO) {
+             FireBaseDatabase.checkNoteLabelRelation(label, noteid)
+        }
+    }
+
+    suspend fun deleteLabelRelationsFromDB(label: String, context: Context) {
+        return withContext(Dispatchers.IO) {
+            FireBaseDatabase.deleteLabelRelationsFromDB(label)
+        }
     }
 
 }

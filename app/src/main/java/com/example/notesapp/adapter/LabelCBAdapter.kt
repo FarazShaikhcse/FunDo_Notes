@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.CheckBox
+import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.RecyclerView
 import com.example.notesapp.R
 import com.example.notesapp.service.DatabaseService
@@ -43,7 +44,8 @@ class LabelCBAdapter(
         }
         if( SharedPref.getUpdateStatus(Constants.UPDATE_STATUS) )
         {
-            if (DatabaseService().checkNoteLabelRelation(labelCB.text.toString(), SharedPref.get(Constants.NOTEID).toString())) {
+            val status = addLabelViewModel.checkNoteLabelRelation(labelCB.text.toString(), SharedPref.get(Constants.NOTEID).toString())
+            if (status) {
                 labelCB.isChecked = true
             }
         }
