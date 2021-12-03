@@ -1,18 +1,13 @@
 package com.example.notesapp
 
-import android.app.AlarmManager
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.content.Context
-import android.os.Build
-import androidx.appcompat.app.AppCompatActivity
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.MenuItem
 import android.widget.ImageView
 import android.widget.Toast
-import androidx.annotation.RequiresApi
 import androidx.appcompat.app.ActionBarDrawerToggle
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
@@ -81,15 +76,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             NotificationManagerCompat.IMPORTANCE_DEFAULT, false,
             "Reminder Note", "shows reminder notes")
         getFirebaseMessagingToken()
-        subscribeToMessaging()
+        subscribeToMessaging("news")
         SharedPref.addString("start","true")
-        if (bundle != null) {
-            if (bundle.getString("Destination") == "userNote") {
-                val note = bundle.getSerializable("reminderNote") as Note
-                loadReminderNotesData(note)
-            }
-        }
-
     }
     private fun loadReminderNotesData(note: Note) {
         SharedPref.setUpdateStatus("updateStatus", true)
@@ -99,17 +87,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         SharedPref.addLong(Constants.REMINDER, note.reminder)
         gotoAddNotePage()
     }
-    private fun subscribeToMessaging() {
-        Firebase.messaging.subscribeToTopic("weather")
-            .addOnCompleteListener { task ->
-                var msg = getString(R.string.msg_subscribed)
-                if (!task.isSuccessful) {
-                    msg = getString(R.string.msg_subscribe_failed)
-                }
-                Log.d("firebeasemessage", msg)
-                Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
-            }
-    }
+
 
     private fun observeNavigation() {
         sharedViewModel.gotoHomePageStatus.observe(this@MainActivity, {
@@ -210,7 +188,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
     }
 
-    private fun gotoHomePage() {
+    fun gotoHomePage() {
         supportFragmentManager.beginTransaction().apply {
             replace(R.id.flFragment, HomeFragment())
             commit()
@@ -240,17 +218,17 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         drawerLayout.closeDrawer(GravityCompat.START)
         when (item.itemId) {
             R.id.menuNotes -> {
-                SharedPref.addString(Constants.NOTES_TYPE, "MainNotes")
-                navMenu.getMenu().getItem(0).setChecked(true)
-                sharedViewModel.setGotoHomePageStatus(true)
+                SharedPref.addString(Constants.NOTES_TYPE, Constants.MAIN_NOTES)
+                navMenu.getMenu().getItem(0).isChecked = true
+                gotoHomePage()
             }
             R.id.menuAddNotes -> {
                 sharedViewModel.setGoToAddNotesPageStatus(true)
             }
             R.id.menuReminder -> {
-                SharedPref.addString(Constants.NOTES_TYPE, "Reminder")
-                navMenu.getMenu().getItem(1).setChecked(true)
-                sharedViewModel.setGotoHomePageStatus(true)
+                SharedPref.addString(Constants.NOTES_TYPE, Constants.REMINDER)
+                navMenu.getMenu().getItem(1).isChecked = true
+                gotoHomePage()
             }
             R.id.menuLabel -> {
                 sharedViewModel.setGoToAddLabelPageStatus(true)
@@ -262,9 +240,9 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 sharedViewModel.setGoToDeletedNotesPageStatus(true)
             }
             R.id.menuArchived -> {
-                SharedPref.addString(Constants.NOTES_TYPE, "Archived")
-                navMenu.getMenu().getItem(5).setChecked(true)
-                sharedViewModel.setGotoHomePageStatus(true)
+                SharedPref.addString(Constants.NOTES_TYPE, Constants.ARCHIVED)
+                navMenu.getMenu().getItem(5).isChecked = true
+                gotoHomePage()
             }
 
         }
@@ -296,9 +274,9 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     override fun onStart() {
         super.onStart()
-        SharedPref.addString(Constants.NOTES_TYPE, "MainNotes")
+        SharedPref.addString(Constants.NOTES_TYPE, Constants.MAIN_NOTES)
+        SharedPref.addString("start", "true")
     }
-
     fun getFirebaseMessagingToken(){
         FirebaseMessaging.getInstance().token.addOnCompleteListener(OnCompleteListener { task ->
             if (!task.isSuccessful) {
@@ -310,8 +288,29 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         })
 
     }
+    fun subscribeToMessaging(topic: String) {
+        Firebase.messaging.subscribeToTopic(topic)
+            .addOnCompleteListener { task ->
+                var msg = "subscribed"
+                if (!task.isSuccessful) {
+                    msg = "failed to subscribe"
+                }
+                Log.d("firebeasemessage", msg)
+                Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
+            }
+    }
 
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        val bundle = intent?.extras
+        if (bundle != null) {
+            if (bundle.getString("Destination") == "userNote") {
+                val note = bundle.getSerializable("reminderNote") as Note
+                loadReminderNotesData(note)
+            }
+        }
 
+    }
 }
 
 

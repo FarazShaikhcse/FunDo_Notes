@@ -14,6 +14,7 @@ import com.example.notesapp.service.DatabaseService
 import com.example.notesapp.service.FireBaseDatabase
 import com.example.notesapp.service.Storage
 import com.example.notesapp.service.roomdb.NoteEntity
+import com.example.notesapp.utils.Constants
 import com.example.notesapp.utils.SharedPref
 import kotlinx.coroutines.launch
 
@@ -55,38 +56,36 @@ class HomeViewModel : ViewModel() {
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-    fun readNotesFromDatabase(context: Context) {
-        viewModelScope.launch {
-            if (SharedPref.get("NotesType").toString() == "Reminder") {
-                val noteList = DatabaseService().readNotesWithReminder()
-                Log.d("listsize", noteList?.size.toString())
-                _readNotesFromDatabaseStatus.value = noteList
-            } else if (SharedPref.get("NotesType").toString() == "MainNotes") {
-                val noteList = DatabaseService().readNotes(false, false, context)
-                Log.d("listsize", noteList.size.toString())
-                _readNotesFromDatabaseStatus.value = noteList
-            }
-            else {
-                val noteList = DatabaseService().readNotes(false, true, context)
-                _readNotesFromDatabaseStatus.value = noteList
-            }
-        }
-    }
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     fun readNotesFromDatabaseWithPagination(modifiedTime: String, context: Context) {
         viewModelScope.launch {
             var noteList : MutableList<NoteEntity> = ArrayList()
-            if (SharedPref.get("NotesType").toString() == "MainNotes") {
-                noteList = DatabaseService().readLimitedNotes(modifiedTime, false, false)!!
-
-            }
-            else if(SharedPref.get("NotesType").toString() == "Archived"){
-                noteList = DatabaseService().readLimitedNotes(modifiedTime, false, true)!!
-            }
-            else if(SharedPref.get("NotesType").toString() == "Reminder"){
-                noteList = DatabaseService().readReminderNotes(modifiedTime, false, false)!!
+            var noteidList : MutableList<String> = ArrayList()
+            when(SharedPref.get(Constants.NOTES_TYPE).toString()) {
+                Constants.MAIN_NOTES -> {
+                    noteList = DatabaseService().readLimitedNotes(modifiedTime, false, false)!!
+                }
+                Constants.ARCHIVED -> {
+                    noteList = DatabaseService().readNotes(false, true)
+                }
+                Constants.REMINDER -> {
+                    noteList = DatabaseService().readNotesWithReminder()
+                }
+                Constants.LABEL_NOTES -> {
+                    noteidList = FireBaseDatabase.getNotesWithLabel(
+                        SharedPref.get("selectedLabel").toString()
+                    )
+                    val tempNoteList = DatabaseService().readNotes(false, false)
+                    Log.d("noteidlist", noteidList.size.toString())
+                    Log.d("tempnotelist", tempNoteList.size.toString())
+                    for (note in tempNoteList) {
+                        if (note.noteid in noteidList) {
+                            noteList.add(note)
+                        }
+                    }
+                    Log.d("labellednotes", noteList.size.toString())
+                }
             }
 
             _readNotesFromDatabaseStatus.value = noteList

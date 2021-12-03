@@ -18,6 +18,8 @@ class AddLabelViewModel : ViewModel() {
     var labelDeletedFromDbStatus = _labelDeletedFromDbStatus as LiveData<Boolean>
     private val _labelEditedinDbStatus = MutableLiveData<Boolean>()
     var labelEditedinDbStatus = _labelEditedinDbStatus as LiveData<Boolean>
+    private val _labelNoteRelationStatus = MutableLiveData<Boolean>()
+    var labelNoteRelationStatus = _labelNoteRelationStatus as LiveData<Boolean>
     private val _getLabelStatus = MutableLiveData<MutableList<String?>>()
     var getLabelStatus = _getLabelStatus as LiveData<MutableList<String?>>
 
@@ -42,6 +44,20 @@ class AddLabelViewModel : ViewModel() {
     fun editLabelinDB(label: String, newLabel: String, context: Context) {
         viewModelScope.launch {
             _labelEditedinDbStatus.value = DatabaseService().editLabelinDB(label, newLabel, context)
+        }
+    }
+
+    fun checkNoteLabelRelation(label: String, noteid: String): Boolean{
+        var status = false
+        viewModelScope.launch {
+            status = DatabaseService().checkNoteLabelRelation(label, noteid)
+        }
+        return status
+    }
+
+    fun deleteLabelRelationsFromDB(label: String, context: Context) {
+        viewModelScope.launch {
+            DatabaseService().deleteLabelRelationsFromDB(label, context)
         }
     }
 }

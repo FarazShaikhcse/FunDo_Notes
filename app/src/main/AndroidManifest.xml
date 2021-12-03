@@ -17,7 +17,8 @@
 
         <activity
             android:name=".MainActivity"
-            android:exported="true">
+            android:exported="true"
+            android:launchMode="singleTask">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -49,7 +50,7 @@
         </activity>
         <receiver android:name=".service.notification.AlarmReceiver" android:enabled="true" />
         <service
-            android:name=".service.FbMessagingService"
+            android:name=".service.pushnotfication.FbMessagingService"
             android:exported="false">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />

@@ -3,6 +3,7 @@ package com.example.notesapp.utils
 object Constants {
     const val NOTEID = "noteid"
     const val CHANNEL_ID = "Reminder"
+    const val LABEL_ID = "labelid"
     const val DELETED = "deleted"
     const val USERS = "users"
     const val NOTES = "notes"
@@ -18,4 +19,10 @@ object Constants {
     const val EMAIL = "email"
     const val AGE = "age"
     const val NOTES_TYPE = "NotesType"
+    const val NOTES_LABLE_RELN = "noteLabelReln"
+    const val LABEL_NAME = "labelname"
+    const val MAIN_NOTES = "MainNotes"
+    const val POSITION = "position"
+    const val UPDATE_STATUS = "updateStatus"
+    const val LABEL_NOTES = "labelnotes"
 }

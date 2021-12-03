@@ -19,6 +19,7 @@ import androidx.core.view.isVisible
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.recyclerview.widget.RecyclerView
 import com.example.notesapp.R
+import com.example.notesapp.adapter.NotesViewAdapter
 import com.google.android.material.imageview.ShapeableImageView
 import com.squareup.picasso.Picasso
 import java.text.SimpleDateFormat

@@ -25,10 +25,9 @@ class DatabaseService {
     }
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-    suspend fun readNotes(isDeleted: Boolean, isArchived: Boolean, context: Context): MutableList<NoteEntity> {
+    suspend fun readNotes(isDeleted: Boolean, isArchived: Boolean): MutableList<NoteEntity> {
         return withContext(Dispatchers.IO) {
             val roomNoteList = MainActivity.roomDBClass.noteDao.readNotes(
-                SharedPref.get("fuid").toString(),
                 isDeleted, isArchived
             )
 
@@ -198,19 +197,10 @@ class DatabaseService {
         }
     }
 
-    suspend fun readNotes(isDeleted: Boolean, label: String, context1: Context): MutableList<NoteEntity> {
-        return withContext(Dispatchers.IO) {
-            val roomNoteList = FireBaseDatabase.getNotesWithLabel(label)
 
-            roomNoteList
-        }
-    }
-
-    suspend fun readNotesWithReminder(): MutableList<NoteEntity>? {
+    suspend fun readNotesWithReminder(): MutableList<NoteEntity> {
         return withContext(Dispatchers.IO) {
-            val roomNoteList = MainActivity.roomDBClass.noteDao.readReminderNotes(
-                SharedPref.get("fuid").toString()
-            )
+            val roomNoteList = MainActivity.roomDBClass.noteDao.readReminderNotes()
 
             roomNoteList
         }
@@ -225,19 +215,16 @@ class DatabaseService {
         }
     }
 
-    suspend fun readReminderNotes(
-        modifiedTime: String,
-        isDeleted: Boolean,
-        isArchived: Boolean
-    ): MutableList<NoteEntity>? {
 
+    suspend fun checkNoteLabelRelation(label: String, noteid: String): Boolean{
         return withContext(Dispatchers.IO) {
+             FireBaseDatabase.checkNoteLabelRelation(label, noteid)
+        }
+    }
 
-            val roomNoteList = FireBaseDatabase.readReminderNotes(modifiedTime, isDeleted, isArchived)
-            if (roomNoteList != null) {
-                Log.d("paginationdbserv", roomNoteList.size.toString())
-            }
-            roomNoteList
+    suspend fun deleteLabelRelationsFromDB(label: String, context: Context) {
+        return withContext(Dispatchers.IO) {
+            FireBaseDatabase.deleteLabelRelationsFromDB(label)
         }
     }
 

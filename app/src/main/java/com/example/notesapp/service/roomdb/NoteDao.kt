@@ -5,10 +5,9 @@ import androidx.room.*
 @Dao
 interface NoteDao {
 
-
-    @Query("Select * from notes where uid=:uid and deleted=:isDeleted  and archived=:isArchived " +
+    @Query("Select * from notes where deleted=:isDeleted  and archived=:isArchived " +
             "ORDER BY modifiedtime DESC")
-    fun readNotes(uid:String, isDeleted: Boolean, isArchived: Boolean):MutableList<NoteEntity>
+    fun readNotes(isDeleted: Boolean, isArchived: Boolean):MutableList<NoteEntity>
 
     @Query("Select * from notes where uid=:uid")
     fun readAllNotes(uid: String):MutableList<NoteEntity>
@@ -36,10 +35,6 @@ interface NoteDao {
     @Query("Update notes set archived=:isArchived, modifiedtime=:time where uid=:uid and noteid=:noteid")
     fun archiveNotes(uid: String, noteid: String, isArchived: Boolean, time: String):Int
 
-    @Query("Select * from notes where uid=:uid and reminder!=:reminder")
-    fun readReminderNotes(uid: String, reminder: Long = 0L):MutableList<NoteEntity>
-
-
-
-
+    @Query("Select * from notes where reminder!=:reminder")
+    fun readReminderNotes(reminder: Long = 0L):MutableList<NoteEntity>
 }

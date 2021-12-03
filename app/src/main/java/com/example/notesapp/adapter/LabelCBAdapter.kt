@@ -1,4 +1,4 @@
-package com.example.notesapp.utils
+package com.example.notesapp.adapter
 
 import android.content.Context
 import android.util.Log
@@ -6,11 +6,12 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.CheckBox
-import android.widget.EditText
-import android.widget.ImageView
-import android.widget.Toast
+import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.RecyclerView
 import com.example.notesapp.R
+import com.example.notesapp.service.DatabaseService
+import com.example.notesapp.utils.Constants
+import com.example.notesapp.utils.SharedPref
 import com.example.notesapp.viewmodels.AddLabelViewModel
 
 class LabelCBAdapter(
@@ -28,7 +29,7 @@ class LabelCBAdapter(
         return LabelViewHolder(view)
     }
 
-    override fun onBindViewHolder(holder: LabelCBAdapter.LabelViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: LabelViewHolder, position: Int) {
         val labelCB = holder.itemView.findViewById<CheckBox>(R.id.labelCheckBox)
         holder.itemView.apply {
             labelCB.setText(labels[position])
@@ -41,8 +42,13 @@ class LabelCBAdapter(
             }
             Log.d("checkedlabels", labelList.toString())
         }
-
-
+        if( SharedPref.getUpdateStatus(Constants.UPDATE_STATUS) )
+        {
+            val status = addLabelViewModel.checkNoteLabelRelation(labelCB.text.toString(), SharedPref.get(Constants.NOTEID).toString())
+            if (status) {
+                labelCB.isChecked = true
+            }
+        }
     }
 
     override fun getItemCount(): Int {
